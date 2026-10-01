@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mercado Arcano - Loja RPG</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- jsPDF para Gerar e Baixar Comprovante em PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: sans-serif; }
@@ -15,7 +18,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Header / Navbar -->
+    <!-- Header -->
     <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
@@ -23,6 +26,7 @@
                 <h1 class="text-2xl font-bold gold-text">Mercado Arcano</h1>
             </div>
 
+            <!-- Dados do Usuário Logado -->
             <div id="userHeaderArea" class="flex items-center space-x-4 hidden">
                 <span class="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full text-sm font-semibold">
                     <i class="fa-solid fa-user-ninja mr-1"></i> <span id="usernameDisplay">Aventureiro</span>
@@ -43,18 +47,18 @@
 
     <main class="max-w-7xl mx-auto p-6 flex-1 w-full">
 
-        <!-- Login -->
+        <!-- 1. Tela de Login -->
         <section id="loginSection" class="max-w-md mx-auto mt-12 rpg-card p-8 rounded-xl shadow-2xl">
             <h2 class="text-2xl font-bold text-center mb-4 gold-text"><i class="fa-solid fa-key mr-2"></i> Autenticação RPG</h2>
             
             <div id="statusCarregamento" class="text-xs text-center text-amber-400 mb-6 bg-slate-800/50 p-2 rounded border border-slate-700">
-                <i class="fa-solid fa-spinner fa-spin mr-1"></i> Sincronizando contas do Google Drive...
+                <i class="fa-solid fa-spinner fa-spin mr-1"></i> Sincronizando dados com o Google Drive...
             </div>
 
             <form id="loginForm" onsubmit="realizarLogin(event)" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-1">Login (ex: nero, victor, ADM)</label>
-                    <input type="text" id="loginKey" placeholder="Informe o login" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white">
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Nome do Usuário (ex: nero, victor, ADM)</label>
+                    <input type="text" id="loginKey" placeholder="Informe seu login" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Senha (pass)</label>
@@ -67,18 +71,19 @@
             <p id="loginError" class="text-red-400 text-sm mt-4 text-center hidden"><i class="fa-solid fa-triangle-exclamation"></i> Usuário ou senha incorretos!</p>
         </section>
 
-        <!-- Loja -->
+        <!-- 2. Tela da Loja -->
         <section id="shopSection" class="hidden space-y-6">
+            <!-- Painel ADM -->
             <div id="adminBanner" class="hidden p-4 bg-purple-900/30 border border-purple-500/40 rounded-xl flex justify-between items-center">
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-crown text-purple-400 text-2xl"></i>
                     <div>
                         <h3 class="font-bold text-purple-200">Painel do Administrador</h3>
-                        <p class="text-xs text-purple-300">Você pode adicionar, alterar ou remover itens do catálogo.</p>
+                        <p class="text-xs text-purple-300">Você possui acesso para criar, editar ou excluir itens do catálogo.</p>
                     </div>
                 </div>
                 <button onclick="abrirModalItem()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-semibold text-sm transition">
-                    <i class="fa-solid fa-plus"></i> Criar Item
+                    <i class="fa-solid fa-plus"></i> Novo Item
                 </button>
             </div>
 
@@ -90,24 +95,24 @@
         </section>
     </main>
 
-    <!-- Modal Carrinho -->
+    <!-- Modal do Carrinho -->
     <div id="cartModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="rpg-card max-w-lg w-full p-6 rounded-xl space-y-4">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="text-xl font-bold gold-text"><i class="fa-solid fa-cart-flatbed"></i> Seu Carrinho</h3>
+                <h3 class="text-xl font-bold gold-text"><i class="fa-solid fa-cart-flatbed"></i> Carrinho de Compras</h3>
                 <button onclick="fecharCarrinho()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
             <div id="cartItemsList" class="space-y-3 max-h-60 overflow-y-auto pr-2"></div>
 
             <div class="border-t border-slate-700 pt-3 flex justify-between items-center">
-                <span class="text-slate-300 font-semibold">Total a Pagar:</span>
+                <span class="text-slate-300 font-semibold">Total:</span>
                 <span id="cartTotal" class="text-xl font-bold text-amber-400">0 Y</span>
             </div>
 
             <div class="flex gap-3 pt-2">
                 <button onclick="fecharCarrinho()" class="w-1/2 py-2 bg-slate-800 text-slate-300 rounded-lg">Voltar</button>
-                <button onclick="finalizarCompra()" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition">Finalizar e Baixar Comprovante</button>
+                <button onclick="finalizarCompra()" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition">Finalizar e Baixar Nota</button>
             </div>
         </div>
     </div>
@@ -115,7 +120,7 @@
     <!-- Modal Item (ADMIN) -->
     <div id="itemModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="rpg-card max-w-md w-full p-6 rounded-xl space-y-4">
-            <h3 id="itemModalTitle" class="text-xl font-bold text-purple-300">Item do Catálogo</h3>
+            <h3 id="itemModalTitle" class="text-xl font-bold text-purple-300">Gerenciar Item</h3>
             <form id="itemForm" onsubmit="salvarItem(event)" class="space-y-3">
                 <input type="hidden" id="itemId">
                 <div>
@@ -128,7 +133,7 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs text-slate-300 mb-1">Preço</label>
+                        <label class="block text-xs text-slate-300 mb-1">Preço (Y)</label>
                         <input type="number" id="itemPrice" required min="1" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-white">
                     </div>
                     <div>
@@ -144,11 +149,12 @@
         </div>
     </div>
 
+    <!-- Lógica JS -->
     <script>
-        // COLE SUA URL DO APPS SCRIPT AQUI
+        // URL da implantação do Apps Script
         const APPS_SCRIPT_URL = 'COLE_SUA_URL_DO_APPS_SCRIPT_AQUI';
 
-        let parsedAccounts = {};
+        let rawDriveData = {};
         let inventory = [
             { id: 1, name: "Pergaminho de Teleporte", desc: "Permite teletransportar o conjurador para uma guilda próxima.", price: 450, stock: 10, icon: "fa-scroll" },
             { id: 2, name: "Espada de Mithril", desc: "Uma espada leve e extremamente afiada (+12 Ataque).", price: 1200, stock: 3, icon: "fa-shield-cat" },
@@ -158,37 +164,40 @@
         let currentUser = null;
         let cart = [];
 
-        // Carrega as contas do Drive filtrando apenas objetos que contêm a propriedade "pass"
+        // Carrega e valida as contas vindas do Apps Script
         async function carregarDadosDoDrive() {
             const statusEl = document.getElementById('statusCarregamento');
             
-            // Dados locais de reserva caso a URL ainda não esteja preenchida
-            const fallbackData = {
-                "ADM": { name: "Administrador", pass: "vagalume", balance: null, isAdmin: true },
-                "nero": { name: "nero nok", pass: "vagalume", balance: 500, isAdmin: false },
-                "victor": { name: "Victor Nok", pass: "vagalume", balance: 500, isAdmin: false }
-            };
-
             try {
                 if (APPS_SCRIPT_URL.includes('COLE_SUA_URL')) {
-                    throw new Error("URL do Apps Script não informada");
+                    throw new Error("URL do Apps Script não preenchida.");
                 }
-                const response = await fetch(APPS_SCRIPT_URL);
+
+                const response = await fetch(APPS_SCRIPT_URL, { redirect: "follow" });
                 const data = await response.json();
 
-                parsedAccounts = {};
-                // Filtra para pegar apenas os objetos de contas reais (ex: ADM, nero, victor)
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                rawDriveData = {};
+                // Pega apenas os objetos das contas (chaves que contêm a propriedade pass)
                 Object.keys(data).forEach(key => {
                     if (data[key] && typeof data[key] === 'object' && data[key].pass !== undefined) {
-                        parsedAccounts[key] = data[key];
+                        rawDriveData[key] = data[key];
                     }
                 });
 
-                statusEl.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> Contas do Drive carregadas: <b>${Object.keys(parsedAccounts).join(', ')}</b>`;
+                const contasEncontradas = Object.keys(rawDriveData).join(', ');
+                statusEl.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> Contas carregadas com sucesso: <b>${contasEncontradas}</b>`;
                 statusEl.className = "text-xs text-center text-emerald-400 mb-6 bg-slate-800/50 p-2 rounded border border-emerald-500/30";
             } catch (err) {
-                console.warn("Usando dados padrão:", err);
-                parsedAccounts = fallbackData;
+                console.warn("Entrando no modo de contingência local:", err);
+                rawDriveData = {
+                    "ADM": { name: "Administrador", pass: "vagalume", balance: null, isAdmin: true },
+                    "nero": { name: "nero nok", pass: "vagalume", balance: 500, isAdmin: false },
+                    "victor": { name: "Victor Nok", pass: "vagalume", balance: 500, isAdmin: false }
+                };
                 statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-amber-400"></i> Contas ativas: <b>nero, victor, ADM</b> (senha: vagalume)`;
                 statusEl.className = "text-xs text-center text-amber-400 mb-6 bg-slate-800/50 p-2 rounded border border-amber-500/30";
             }
@@ -196,21 +205,21 @@
 
         window.onload = carregarDadosDoDrive;
 
+        // Login
         function realizarLogin(e) {
             e.preventDefault();
             const inputKey = document.getElementById('loginKey').value.trim();
             const inputPass = document.getElementById('loginPass').value.trim();
 
-            // Busca a chave ignorando maiúsculas e minúsculas
-            const matchedKey = Object.keys(parsedAccounts).find(k => k.toLowerCase() === inputKey.toLowerCase());
-            const acc = matchedKey ? parsedAccounts[matchedKey] : null;
+            const matchedKey = Object.keys(rawDriveData).find(k => k.toLowerCase() === inputKey.toLowerCase());
+            const acc = matchedKey ? rawDriveData[matchedKey] : null;
 
             if (acc && acc.pass === inputPass) {
                 currentUser = {
                     key: matchedKey,
                     name: acc.name || matchedKey,
                     pass: acc.pass,
-                    balance: acc.balance !== null ? acc.balance : 999999,
+                    balance: acc.balance !== null ? acc.balance : 999999, // Lê o saldo de "balance"
                     isAdmin: !!acc.isAdmin
                 };
 
@@ -244,6 +253,7 @@
             atualizarCarrinhoBadge();
         }
 
+        // Renderização dos Itens
         function renderItens() {
             const grid = document.getElementById('itemsGrid');
             grid.innerHTML = '';
@@ -284,6 +294,7 @@
             });
         }
 
+        // Operações de Carrinho
         function adicionarAoCarrinho(itemId) {
             const item = inventory.find(i => i.id === itemId);
             if (!item || item.stock <= 0) return;
@@ -355,7 +366,7 @@
             const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
 
             if (currentUser.balance < total && !currentUser.isAdmin) {
-                alert("Você não possui saldo suficiente para esta compra!");
+                alert("Você não possui saldo suficiente para realizar esta compra!");
                 return;
             }
 
@@ -392,7 +403,7 @@
             atualizarCarrinhoBadge();
             fecharCarrinho();
             renderItens();
-            alert("Compra concluída! A nota PDF foi baixada e o arquivo no Google Drive foi atualizado.");
+            alert("Compra concluída com sucesso! O comprovante em PDF foi baixado.");
         }
 
         function gerarNotaDeCompra(itensComprados, total) {

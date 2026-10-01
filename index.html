@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -25,7 +25,6 @@
             min-height: 100vh;
         }
 
-        /* Tela de Login */
         #login-screen {
             max-width: 400px;
             margin: 80px auto;
@@ -69,7 +68,6 @@
         .btn-success { background-color: var(--accent); color: #080b14; }
         .btn-success:hover { background-color: #2ec4af; }
 
-        /* Conteúdo da Loja */
         #store-content { display: none; max-width: 1100px; margin: 0 auto; }
 
         header {
@@ -122,7 +120,6 @@
         .product-title { font-size: 1.1rem; margin-bottom: 10px; }
         .product-price { font-size: 1rem; color: #fbbf24; margin-bottom: 15px; font-weight: bold; }
 
-        /* Carrinho Lateral */
         .cart-panel {
             background: linear-gradient(145deg, rgba(23,30,50,.94), rgba(14,19,33,.94));
             border: 1px solid #28314a;
@@ -161,7 +158,6 @@
             justify-content: space-between;
         }
 
-        /* Botão de exclusão para ADM */
         .delete-card-btn {
             position: absolute;
             top: 10px;
@@ -180,7 +176,6 @@
         }
         .delete-card-btn:hover { background-color: #e05572; }
 
-        /* Painel ADM */
         #admin-panel {
             background: #151b31;
             border: 1px solid var(--primary);
@@ -205,10 +200,9 @@
 </head>
 <body>
 
-    <!-- TELA DE LOGIN UNIFICADA COM O BANCO -->
     <div id="login-screen">
         <h2>🔒 Acesso à Loja (Ympori Bank)</h2>
-        <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 20px;">Use o mesmo login/usuário e senha cadastrados no seu Ympori Bank.</p>
+        <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 20px;">Pesquisando dados diretamente no Google Drive...</p>
         <form id="formLogin" onsubmit="fazerLogin(event)">
             <div class="input-group">
                 <label for="login-conta">Login / Usuário</label>
@@ -218,12 +212,11 @@
                 <label for="login-senha">Senha</label>
                 <input type="password" id="login-senha" placeholder="Sua senha do banco" required>
             </div>
-            <button class="btn">Entrar na Loja</button>
+            <button class="btn" id="btn-entrar" type="submit">Entrar na Loja</button>
         </form>
         <div id="login-alerta" class="mensagem" style="margin-top: 15px;"></div>
     </div>
 
-    <!-- CONTEÚDO DA LOJA -->
     <div id="store-content">
         <header>
             <div>
@@ -238,7 +231,6 @@
 
         <div id="alerta" class="mensagem"></div>
 
-        <!-- PAINEL EXCLUSIVO PARA ADM -->
         <div id="admin-panel">
             <h3>🛠 Painel do Administrador (Gerenciar Produtos)</h3>
             <div class="admin-form-grid">
@@ -258,7 +250,6 @@
             </div>
         </div>
 
-        <!-- LAYOUT DE PRODUTOS E CARRINHO -->
         <div class="main-layout">
             <main class="container" id="product-grid"></main>
             
@@ -276,23 +267,52 @@
         </div>
     </div>
 
-    <!-- Canvas oculto para gerar a nota PNG -->
     <canvas id="notaCanvas" width="400" height="380" style="display:none;"></canvas>
 
     <script>
-        // URL da API do Google Apps Script (mesma configurada no seu banco)
         const API_URL = "https://script.google.com/macros/s/AKfycbyin4Und1JN-lPq9vBjDpz4EzeXb7g_GkBe44SmRyzvQGNBKwTYEZo0CFquPYCPioM/exec";
 
-        let accounts = JSON.parse(localStorage.getItem('ympori_accounts')) || {};
-        let currentUserKey = null;
+        let accounts = {
+            "ADM": {
+                name: "Administrador",
+                pass: "vagalume",
+                code: "YMP-0000",
+                balance: Infinity,
+                investedBalance: 0,
+                isAdmin: true,
+                transactions: [],
+                notifications: []
+            }
+        };
 
+        let currentUserKey = null;
         let produtos = JSON.parse(localStorage.getItem('ympori_produtos')) || [
             { id: 1, nome: "Poção de Vida Pequena", preco: 50.00, icone: "🧪" },
             { id: 2, nome: "Elixir de Mana", preco: 120.00, icone: "✨" },
             { id: 3, nome: "Escudo de Mithril", preco: 450.00, icone: "🛡️" }
         ];
-
         let carrinho = [];
+
+        // Ao carregar a página, busca imediatamente as contas atualizadas direto do Google Drive via API
+        window.addEventListener('DOMContentLoaded', async () => {
+            await pesquisarContasNoDrive();
+        });
+
+        async function pesquisarContasNoDrive() {
+            if (!API_URL) return;
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+                    accounts = data;
+                    console.log("Contas pesquisadas e carregadas do Google Drive com sucesso!");
+                }
+            } catch (e) {
+                console.error("Erro ao pesquisar contas no Google Drive. Usando dados locais de segurança.", e);
+                const localData = JSON.parse(localStorage.getItem('ympori_accounts'));
+                if (localData) accounts = localData;
+            }
+        }
 
         function mostrarAlerta(elementoId, texto, tipo) {
             const alerta = document.getElementById(elementoId);
@@ -306,17 +326,9 @@
         async function fazerLogin(e) {
             if (e) e.preventDefault();
             
-            // Sincroniza as contas atualizadas do banco caso o usuário tenha cadastrado lá recentemente
-            try {
-                const response = await fetch(API_URL);
-                const remoteData = await response.json();
-                if (remoteData && Object.keys(remoteData).length > 0) {
-                    accounts = remoteData;
-                    localStorage.setItem('ympori_accounts', JSON.stringify(accounts));
-                }
-            } catch (err) {
-                console.log("Usando contas locais salvas.");
-            }
+            // Pesquisa os dados mais recentes no Drive antes de validar o login
+            mostrarAlerta('login-alerta', 'Consultando arquivo no Google Drive...', 'sucesso');
+            await pesquisarContasNoDrive();
 
             const contaInput = document.getElementById('login-conta').value.trim();
             const senhaInput = document.getElementById('login-senha').value.trim();
@@ -356,6 +368,7 @@
             document.getElementById('login-screen').style.display = 'block';
             document.getElementById('login-senha').value = '';
             document.getElementById('login-conta').value = '';
+            pesquisarContasNoDrive(); // Atualiza dados ao sair
         }
 
         function atualizarSaldoTela() {
@@ -376,7 +389,7 @@
                     body: JSON.stringify(accounts)
                 });
             } catch (e) {
-                console.error("Erro ao sincronizar saldo com o banco/Drive:", e);
+                console.error("Erro ao salvar dados no Google Drive:", e);
             }
         }
 
@@ -467,6 +480,9 @@
                 return;
             }
 
+            // Antes de finalizar, busca a versão mais recente do arquivo no Google Drive para evitar conflito de saldo
+            await pesquisarContasNoDrive();
+
             const totalGeral = calcularTotalCarrinho();
             const acc = accounts[currentUserKey];
 
@@ -475,7 +491,6 @@
                     acc.balance -= totalGeral;
                 }
 
-                // Adiciona transação no extrato do banco do usuário
                 const dateStr = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
                 if (!acc.transactions) acc.transactions = [];
                 acc.transactions.push({
@@ -488,7 +503,7 @@
                 await salvarDadosBanco();
                 atualizarSaldoTela();
                 
-                mostrarAlerta('alerta', 'Compra realizada com sucesso! Nota fiscal gerada.', 'sucesso');
+                mostrarAlerta('alerta', 'Compra realizada com sucesso e salva no Google Drive!', 'sucesso');
                 gerarNotaPNG(carrinho, totalGeral);
 
                 carrinho = [];
@@ -503,21 +518,4 @@
             const ctx = canvas.getContext('2d');
             const acc = accounts[currentUserKey];
 
-            canvas.height = 300 + (itens.length * 25);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Fundo da Nota (Branco)
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Borda Estilizada
-            ctx.strokeStyle = '#8b7cff';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
-
-            // Cabeçalho
-            ctx.fillStyle = '#080b14';
-            ctx.font = 'bold 18px Segoe UI';
-            ctx.textAlign = 'center';
-            ctx.fillText('YMPORI BANK - COMPROVANTE 
-
+        

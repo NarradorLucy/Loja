@@ -3,39 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mercado Ympori - Loja RPG</title>
+<title>Loja Ympori RPG</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#080b14;--panel:#111728;--panel2:#171e32;--text:#eef2ff;--muted:#929bb5;--accent:#8b7cff;--accent2:#38d9c3;--danger:#ff6685}
 body{font-family:Inter,system-ui,sans-serif;background:radial-gradient(circle at 80% 0%,#25204d 0,#080b14 38%);color:var(--text);min-height:100vh;padding:24px}
-header{max-width:1000px;margin:0 auto 30px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #242b40;padding-bottom:20px}
+header{max-width:1000px;margin:0 auto 30px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #242b40;padding-bottom:20px;flex-wrap:wrap;gap:15px}
 .logo{font-size:24px;font-weight:800}.logo span{color:var(--accent)}
-.user-status{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px}
-.user-status strong{color:var(--accent2)}
-.btn-session{background:var(--panel2);border:1px solid #28314a;color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px}
+.user-bar{background:var(--panel2);border:1px solid #28314a;padding:10px 16px;border-radius:12px;display:flex;align-items:center;gap:12px}
+.user-bar strong{color:var(--accent2)}
+.btn-action{background:var(--accent);border:0;color:#fff;padding:8px 14px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px}
+.btn-sec{background:#252d46;border:0;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px}
 
 .container{max-width:1000px;margin:0 auto}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
-.card{background:linear-gradient(145deg,rgba(23,30,50,.94),rgba(14,19,33,.94));border:1px solid #28314a;border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.card{background:linear-gradient(145deg,rgba(23,30,50,.94),rgba(14,19,33,.94));border:1px solid #28314a;border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:space-between}
 .item-tag{font-size:11px;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:6px}
 .item-title{font-size:18px;font-weight:700;margin-bottom:8px}
-.item-desc{font-size:13px;color:var(--muted);line-height:1.4;margin-bottom:16px;flex-grow:1}
-.item-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
-.price{font-size:18px;font-weight:800;color:var(--accent2)}
-.btn-buy{background:var(--accent);border:0;color:#fff;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer;transition:0.2s}
-.btn-buy:hover{opacity:0.9;transform:translateY(-1px)}
+.item-desc{font-size:13px;color:var(--muted);line-height:1.4;margin-bottom:16px}
+.price{font-size:18px;font-weight:800;color:var(--accent2);margin-bottom:12px}
 
-/* Modal de Confirmação com Senha */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;place-items:center;z-index:30}
-.modal-content{background:#111728;padding:24px;border-radius:18px;border:1px solid #28314a;width:100%;max-width:380px}
-.field{display:grid;gap:6px;margin:15px 0}
+/* Modais */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;place-items:center;z-index:30}
+.modal-content{background:#111728;padding:24px;border-radius:18px;border:1px solid #28314a;width:90%;max-width:400px}
+.field{display:grid;gap:6px;margin:12px 0}
 .field label{font-size:13px;color:var(--muted)}
 input{background:#0c1120;border:1px solid #2b3550;color:#fff;border-radius:10px;padding:12px;outline:none;width:100%}
 input:focus{border-color:var(--accent)}
 .modal-actions{display:flex;gap:10px;margin-top:20px}
-.btn-alt{background:#252d46;border:0;color:#fff;padding:10px;border-radius:10px;font-weight:700;cursor:pointer;flex:1}
 
-.toast{position:fixed;right:25px;bottom:25px;background:#171e32;border:1px solid #303b59;padding:13px 18px;border-radius:12px;display:none;z-index:20;font-weight:600}
+.toast{position:fixed;right:25px;bottom:25px;background:#171e32;border:1px solid #303b59;padding:14px 20px;border-radius:12px;display:none;z-index:40;font-weight:600;max-width:350px}
 </style>
 </head>
 <body>
@@ -43,11 +40,16 @@ input:focus{border-color:var(--accent)}
 <header>
   <div>
     <div class="logo">Loja<span>Ympori</span></div>
-    <p style="font-size: 12px; color: var(--muted);">Itens & Equipamentos de RPG</p>
+    <p style="font-size:12px;color:var(--muted);">Mercado do Ympori Bank</p>
   </div>
-  <div class="user-status">
-    <span>Conectado como: <strong id="sessionUser">Detectando...</strong></span>
-    <button class="btn-session" onclick="changeUser()">Trocar Conta</button>
+  
+  <!-- Painel Superior de Login/Sessão -->
+  <div class="user-bar">
+    <div>
+      <span style="font-size:12px;color:var(--muted);display:block;">Conta Ativa:</span>
+      <strong id="sessionUserDisplay">Não autenticado</strong>
+    </div>
+    <button class="btn-action" onclick="openLoginModal()">Entrar / Trocar</button>
   </div>
 </header>
 
@@ -55,25 +57,46 @@ input:focus{border-color:var(--accent)}
   <div class="grid" id="catalog"></div>
 </main>
 
-<!-- Modal de Confirmação de Compra -->
+<!-- Modal 1: Login/Identificação -->
+<div id="loginModal" class="modal">
+  <div class="modal-content">
+    <h3>Entrar com Ympori Bank</h3>
+    <p style="font-size:12px;color:var(--muted);margin-top:4px;">Informe seus dados cadastrados no banco.</p>
+    <form onsubmit="saveSession(event)">
+      <div class="field">
+        <label>Usuário / Código YMP</label>
+        <input id="loginUserInput" required placeholder="Ex: Nero ou YMP-1234">
+      </div>
+      <div class="field">
+        <label>Senha do Banco</label>
+        <input id="loginPassInput" type="password" required placeholder="Sua senha">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-sec" onclick="closeModal('loginModal')">Cancelar</button>
+        <button type="submit" class="btn-action" style="flex:1;">Salvar Login</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 2: Confirmação da Compra -->
 <div id="buyModal" class="modal">
   <div class="modal-content">
-    <h3 style="margin-bottom:8px;">Confirmar Pagamento</h3>
-    <p style="font-size:13px; color:var(--muted);" id="modalItemDesc">Item: --</p>
+    <h3>Confirmar Compra</h3>
+    <p style="font-size:13px;color:var(--accent2);margin:10px 0;" id="modalItemTitle">--</p>
     
     <form onsubmit="executePurchase(event)">
       <div class="field">
-        <label>Usuário / Código YMP</label>
-        <input id="modalUser" required placeholder="Seu login no banco">
+        <label>Confirme o Usuário</label>
+        <input id="buyUser" required>
       </div>
       <div class="field">
         <label>Senha do Ympori Bank</label>
-        <input id="modalPass" type="password" required placeholder="Sua senha de acesso">
+        <input id="buyPass" type="password" required placeholder="Digite a senha para debitar">
       </div>
-      
       <div class="modal-actions">
-        <button type="button" class="btn-alt" onclick="closeBuyModal()">Cancelar</button>
-        <button type="submit" class="btn-buy" style="flex:1;">Pagar</button>
+        <button type="button" class="btn-sec" onclick="closeModal('buyModal')">Cancelar</button>
+        <button type="submit" class="btn-action" style="flex:1;">Confirmar Pagamento</button>
       </div>
     </form>
   </div>
@@ -91,68 +114,81 @@ const items = [
   { category: "Acessório", name: "Anel de Proteção Arcano", desc: "Aumenta a Defesa em +1.", price: 800.00 }
 ];
 
-let currentUser = localStorage.getItem('ympori_session') || '';
+let currentUser = localStorage.getItem('ympori_user') || '';
+let currentPass = localStorage.getItem('ympori_pass') || '';
 let selectedItem = null;
 
-function initStore() {
-  updateUserUI();
+function init() {
+  updateUserDisplay();
   renderCatalog();
 }
 
-function updateUserUI() {
-  document.getElementById('sessionUser').textContent = currentUser || "Nenhuma";
+function updateUserDisplay() {
+  const display = document.getElementById('sessionUserDisplay');
+  display.textContent = currentUser || "Não autenticado";
 }
 
-function changeUser() {
-  const newUser = prompt("Informe seu usuário no Ympori Bank:");
-  if (newUser && newUser.trim() !== "") {
-    currentUser = newUser.trim();
-    localStorage.setItem('ympori_session', currentUser);
-    updateUserUI();
-  }
+function openLoginModal() {
+  document.getElementById('loginUserInput').value = currentUser;
+  document.getElementById('loginPassInput').value = currentPass;
+  document.getElementById('loginModal').style.display = 'grid';
+}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+function saveSession(e) {
+  e.preventDefault();
+  currentUser = document.getElementById('loginUserInput').value.trim();
+  currentPass = document.getElementById('loginPassInput').value.trim();
+  
+  localStorage.setItem('ympori_user', currentUser);
+  localStorage.setItem('ympori_pass', currentPass);
+  
+  updateUserDisplay();
+  closeModal('loginModal');
+  toast("✅ Dados de acesso salvos!");
 }
 
 function renderCatalog() {
-  const catalog = document.getElementById('catalog');
-  catalog.innerHTML = items.map((item, index) => `
+  const container = document.getElementById('catalog');
+  container.innerHTML = items.map((item, i) => `
     <div class="card">
       <div>
         <div class="item-tag">${item.category}</div>
         <div class="item-title">${item.name}</div>
         <div class="item-desc">${item.desc}</div>
       </div>
-      <div class="item-footer">
-        <div class="price">Yinporion ${item.price.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-        <button class="btn-buy" onclick="openBuyModal(${index})">Comprar</button>
+      <div>
+        <div class="price">Yinporion ${item.price.toFixed(2)}</div>
+        <button class="btn-action" style="width:100%;" onclick="startBuy(${i})">Comprar</button>
       </div>
     </div>
   `).join('');
 }
 
-function openBuyModal(index) {
+function startBuy(index) {
+  if (!currentUser) {
+    toast("⚠️ Por favor, entre na sua conta primeiro.");
+    openLoginModal();
+    return;
+  }
+  
   selectedItem = items[index];
-  document.getElementById('modalItemDesc').textContent = `${selectedItem.name} - Yinporion ${selectedItem.price.toFixed(2)}`;
-  document.getElementById('modalUser').value = currentUser;
-  document.getElementById('modalPass').value = '';
+  document.getElementById('modalItemTitle').textContent = `${selectedItem.name} (${selectedItem.price.toFixed(2)} Yinporions)`;
+  document.getElementById('buyUser').value = currentUser;
+  document.getElementById('buyPass').value = currentPass;
   document.getElementById('buyModal').style.display = 'grid';
-}
-
-function closeBuyModal() {
-  document.getElementById('buyModal').style.display = 'none';
 }
 
 async function executePurchase(e) {
   e.preventDefault();
   
-  const user = document.getElementById('modalUser').value.trim();
-  const pass = document.getElementById('modalPass').value.trim();
+  const user = document.getElementById('buyUser').value.trim();
+  const pass = document.getElementById('buyPass').value.trim();
 
-  if (!user || !pass) {
-    toast("Preencha o usuário e a senha!");
-    return;
-  }
-
-  toast("Validando credenciais...");
+  toast("Enviando pedido ao Ympori Bank...");
 
   try {
     const payload = {
@@ -173,26 +209,20 @@ async function executePurchase(e) {
 
     if (res.success) {
       toast(`✅ ${res.message}`);
-      closeBuyModal();
+      closeModal('buyModal');
       
-      // Salva sessão local para próximas compras
+      // Atualiza credenciais guardadas se foram alteradas na janela de compra
       currentUser = user;
-      localStorage.setItem('ympori_session', currentUser);
-      updateUserUI();
-
-      // Sincroniza saldo local no navegador se o banco estiver na mesma aba
-      let localAccounts = JSON.parse(localStorage.getItem('ympori_accounts')) || {};
-      let userKeyInLocal = Object.keys(localAccounts).find(k => k === user || localAccounts[k].code === user);
-      if (userKeyInLocal && localAccounts[userKeyInLocal]) {
-        localAccounts[userKeyInLocal].balance = res.newBalance;
-        localStorage.setItem('ympori_accounts', JSON.stringify(localAccounts));
-      }
+      currentPass = pass;
+      localStorage.setItem('ympori_user', user);
+      localStorage.setItem('ympori_pass', pass);
+      updateUserDisplay();
     } else {
       toast(`❌ ${res.message}`);
     }
   } catch (err) {
     console.error(err);
-    toast("❌ Erro de conexão com o banco.");
+    toast("❌ Erro ao conectar ao servidor. Verifique o console (F12).");
   }
 }
 
@@ -200,10 +230,10 @@ function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.style.display = 'block';
-  setTimeout(() => t.style.display = 'none', 3000);
+  setTimeout(() => t.style.display = 'none', 3500);
 }
 
-initStore();
+init();
 </script>
 </body>
 </html>

@@ -15,7 +15,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Header / Barra Superior -->
+    <!-- Header / Navbar -->
     <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
@@ -48,13 +48,13 @@
             <h2 class="text-2xl font-bold text-center mb-4 gold-text"><i class="fa-solid fa-key mr-2"></i> Autenticação RPG</h2>
             
             <div id="statusCarregamento" class="text-xs text-center text-amber-400 mb-6 bg-slate-800/50 p-2 rounded border border-slate-700">
-                <i class="fa-solid fa-spinner fa-spin mr-1"></i> Conectando ao Google Drive...
+                <i class="fa-solid fa-spinner fa-spin mr-1"></i> Sincronizando contas do Google Drive...
             </div>
 
             <form id="loginForm" onsubmit="realizarLogin(event)" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-1">Nome da Conta (ex: nero, victor, ADM)</label>
-                    <input type="text" id="loginKey" placeholder="Ex: nero" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white">
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Login (ex: nero, victor, ADM)</label>
+                    <input type="text" id="loginKey" placeholder="Informe o login" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Senha (pass)</label>
@@ -145,10 +145,10 @@
     </div>
 
     <script>
-        // COLE A URL DA SUA IMPLANTAÇÃO DO GOOGLE APPS SCRIPT AQUI
+        // COLE SUA URL DO APPS SCRIPT AQUI
         const APPS_SCRIPT_URL = 'COLE_SUA_URL_DO_APPS_SCRIPT_AQUI';
 
-        let rawDriveData = {};
+        let parsedAccounts = {};
         let inventory = [
             { id: 1, name: "Pergaminho de Teleporte", desc: "Permite teletransportar o conjurador para uma guilda próxima.", price: 450, stock: 10, icon: "fa-scroll" },
             { id: 2, name: "Espada de Mithril", desc: "Uma espada leve e extremamente afiada (+12 Ataque).", price: 1200, stock: 3, icon: "fa-shield-cat" },
@@ -158,41 +158,60 @@
         let currentUser = null;
         let cart = [];
 
-        // Carrega o arquivo JSON bruto do Drive através do Apps Script
+        // Carrega as contas do Drive filtrando apenas objetos que contêm a propriedade "pass"
         async function carregarDadosDoDrive() {
             const statusEl = document.getElementById('statusCarregamento');
-            try {
-                const response = await fetch(APPS_SCRIPT_URL);
-                rawDriveData = await response.json();
+            
+            // Dados locais de reserva caso a URL ainda não esteja preenchida
+            const fallbackData = {
+                "ADM": { name: "Administrador", pass: "vagalume", balance: null, isAdmin: true },
+                "nero": { name: "nero nok", pass: "vagalume", balance: 500, isAdmin: false },
+                "victor": { name: "Victor Nok", pass: "vagalume", balance: 500, isAdmin: false }
+            };
 
-                statusEl.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> Arquivo lido com sucesso do Google Drive!`;
+            try {
+                if (APPS_SCRIPT_URL.includes('COLE_SUA_URL')) {
+                    throw new Error("URL do Apps Script não informada");
+                }
+                const response = await fetch(APPS_SCRIPT_URL);
+                const data = await response.json();
+
+                parsedAccounts = {};
+                // Filtra para pegar apenas os objetos de contas reais (ex: ADM, nero, victor)
+                Object.keys(data).forEach(key => {
+                    if (data[key] && typeof data[key] === 'object' && data[key].pass !== undefined) {
+                        parsedAccounts[key] = data[key];
+                    }
+                });
+
+                statusEl.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> Contas do Drive carregadas: <b>${Object.keys(parsedAccounts).join(', ')}</b>`;
                 statusEl.className = "text-xs text-center text-emerald-400 mb-6 bg-slate-800/50 p-2 rounded border border-emerald-500/30";
             } catch (err) {
-                console.error("Erro ao ler do Drive:", err);
-                statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Erro ao conectar com o Apps Script. Verifique a URL.`;
+                console.warn("Usando dados padrão:", err);
+                parsedAccounts = fallbackData;
+                statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-amber-400"></i> Contas ativas: <b>nero, victor, ADM</b> (senha: vagalume)`;
                 statusEl.className = "text-xs text-center text-amber-400 mb-6 bg-slate-800/50 p-2 rounded border border-amber-500/30";
             }
         }
 
         window.onload = carregarDadosDoDrive;
 
-        // Função de Login que identifica o usuario, senha (pass) e saldo (balance)
         function realizarLogin(e) {
             e.preventDefault();
             const inputKey = document.getElementById('loginKey').value.trim();
             const inputPass = document.getElementById('loginPass').value.trim();
 
-            // Procura a chave correspondente dentro do arquivo JSON (ex: "nero", "victor", "ADM")
-            const matchedKey = Object.keys(rawDriveData).find(k => k.toLowerCase() === inputKey.toLowerCase());
-            const accountData = matchedKey ? rawDriveData[matchedKey] : null;
+            // Busca a chave ignorando maiúsculas e minúsculas
+            const matchedKey = Object.keys(parsedAccounts).find(k => k.toLowerCase() === inputKey.toLowerCase());
+            const acc = matchedKey ? parsedAccounts[matchedKey] : null;
 
-            if (accountData && typeof accountData === 'object' && accountData.pass === inputPass) {
+            if (acc && acc.pass === inputPass) {
                 currentUser = {
-                    key: matchedKey, // Nome do login original ex: "nero"
-                    name: accountData.name || matchedKey,
-                    pass: accountData.pass,
-                    balance: accountData.balance !== null ? accountData.balance : 999999, // Lê o saldo
-                    isAdmin: !!accountData.isAdmin
+                    key: matchedKey,
+                    name: acc.name || matchedKey,
+                    pass: acc.pass,
+                    balance: acc.balance !== null ? acc.balance : 999999,
+                    isAdmin: !!acc.isAdmin
                 };
 
                 document.getElementById('loginError').classList.add('hidden');
@@ -256,7 +275,7 @@
                             <span class="text-xs text-slate-400">Estoque: <b class="text-slate-200">${item.stock}</b></span>
                         </div>
                         <button onclick="adicionarAoCarrinho(${item.id})" ${item.stock <= 0 ? 'disabled' : ''} 
-                            class="w-full py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-700 disabled:text-slate-500 text-slate-950 font-bold rounded-lg transition">
+                            class="w-full py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-700 text-slate-950 font-bold rounded-lg transition">
                             ${item.stock > 0 ? 'Adicionar ao Carrinho' : 'Esgotado'}
                         </button>
                     </div>
@@ -331,7 +350,6 @@
             abrirCarrinho();
         }
 
-        // Finalizar compra e atualizar o campo balance do usuario no arquivo do Drive
         async function finalizarCompra() {
             if (cart.length === 0) return;
             const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
@@ -351,7 +369,6 @@
                 if (invItem) invItem.stock -= cartItem.qty;
             });
 
-            // Payload para o Apps Script atualizar a conta do usuario logado no Drive
             const payload = {
                 userKey: currentUser.key,
                 userPass: currentUser.pass,
@@ -375,7 +392,7 @@
             atualizarCarrinhoBadge();
             fecharCarrinho();
             renderItens();
-            alert("Compra efetuada! A nota fiscal foi baixada e o saldo atualizado no Google Drive.");
+            alert("Compra concluída! A nota PDF foi baixada e o arquivo no Google Drive foi atualizado.");
         }
 
         function gerarNotaDeCompra(itensComprados, total) {

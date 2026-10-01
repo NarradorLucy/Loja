@@ -8,11 +8,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- jsPDF para Download de Notas Fiscal/Comprovante -->
+    <!-- jsPDF para Download da Nota de Compra -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .rpg-card { background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; backdrop-filter: blur(8px); }
+        .rpg-card { background: rgba(30, 41, 59, 0.85); border: 1px solid #334155; backdrop-filter: blur(8px); }
         .gold-text { color: #fbbf24; text-shadow: 0 0 8px rgba(251, 191, 36, 0.3); }
     </style>
 </head>
@@ -49,23 +49,30 @@
 
         <!-- 1. Tela de Login -->
         <section id="loginSection" class="max-w-md mx-auto mt-12 rpg-card p-8 rounded-xl shadow-2xl">
-            <h2 class="text-2xl font-bold text-center mb-6 gold-text"><i class="fa-solid fa-key mr-2"></i> Autenticação de Aventureiro</h2>
-            <p class="text-sm text-slate-400 mb-6 text-center">Informe seus dados cadastrados na guilda (`ympori_accounts.json`).</p>
+            <h2 class="text-2xl font-bold text-center mb-6 gold-text"><i class="fa-solid fa-key mr-2"></i> Autenticação RPG</h2>
             
+            <div class="bg-slate-800/60 p-3 rounded-lg text-xs text-slate-300 mb-6 border border-slate-700">
+                <p class="font-bold text-amber-400 mb-1"><i class="fa-solid fa-circle-info"></i> Contas ativas encontradas no Drive:</p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li><b>Usuário:</b> <code class="text-amber-200">nero</code> | <b>Senha:</b> <code class="text-amber-200">vagalume</code></li>
+                    <li><b>Administrador:</b> <code class="text-purple-300">adm</code> | <b>Senha:</b> <code class="text-purple-300">admin123</code></li>
+                </ul>
+            </div>
+
             <form id="loginForm" onsubmit="realizarLogin(event)" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Chave de Usuário (userKey)</label>
-                    <input type="text" id="loginKey" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500">
+                    <input type="text" id="loginKey" placeholder="Ex: nero ou adm" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Senha (userPass)</label>
-                    <input type="password" id="loginPass" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500">
+                    <input type="password" id="loginPass" placeholder="Sua senha" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-3 rounded-lg transition duration-200 mt-2">
                     Entrar na Loja
                 </button>
             </form>
-            <p id="loginError" class="text-red-400 text-sm mt-4 text-center hidden"><i class="fa-solid fa-triangle-exclamation"></i> Usuário ou senha inválidos!</p>
+            <p id="loginError" class="text-red-400 text-sm mt-4 text-center hidden"><i class="fa-solid fa-triangle-exclamation"></i> Usuário ou senha incorretos!</p>
         </section>
 
         <!-- 2. Painel Principal da Loja (Visível após Login) -->
@@ -76,18 +83,18 @@
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-crown text-purple-400 text-2xl"></i>
                     <div>
-                        <h3 class="font-bold text-purple-200">Painel do Administrador</h3>
-                        <p class="text-xs text-purple-300">Você possui permissões supremas para gerenciar itens da loja.</p>
+                        <h3 class="font-bold text-purple-200">Painel de Administrador</h3>
+                        <p class="text-xs text-purple-300">Permissão total: adicione, modifique ou remova itens do catálogo.</p>
                     </div>
                 </div>
                 <button onclick="abrirModalItem()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-semibold text-sm transition flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Novo Item
+                    <i class="fa-solid fa-plus"></i> Adicionar Novo Item
                 </button>
             </div>
 
             <div class="flex justify-between items-center">
                 <h2 class="text-2xl font-bold gold-text flex items-center gap-2">
-                    <i class="fa-solid fa-store"></i> Itens Disponíveis
+                    <i class="fa-solid fa-store"></i> Itens da Guilda
                 </h2>
             </div>
 
@@ -102,7 +109,7 @@
     <div id="cartModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="rpg-card max-w-lg w-full p-6 rounded-xl space-y-4">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="text-xl font-bold gold-text"><i class="fa-solid fa-cart-flatbed"></i> Seu Carrinho de Compras</h3>
+                <h3 class="text-xl font-bold gold-text"><i class="fa-solid fa-cart-flatbed"></i> Carrinho de Compras</h3>
                 <button onclick="fecharCarrinho()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
@@ -111,13 +118,13 @@
             </div>
 
             <div class="border-t border-slate-700 pt-3 flex justify-between items-center">
-                <span class="text-slate-300 font-semibold">Total a pagar:</span>
+                <span class="text-slate-300 font-semibold">Total da Compra:</span>
                 <span id="cartTotal" class="text-xl font-bold text-amber-400">0 PO</span>
             </div>
 
             <div class="flex gap-3 pt-2">
                 <button onclick="fecharCarrinho()" class="w-1/2 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">Continuar Comprando</button>
-                <button onclick="finalizarCompra()" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition">Finalizar Compra</button>
+                <button onclick="finalizarCompra()" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition">Pagar e Baixar Nota</button>
             </div>
         </div>
     </div>
@@ -125,7 +132,7 @@
     <!-- Modal Adicionar/Editar Item (ADMIN) -->
     <div id="itemModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="rpg-card max-w-md w-full p-6 rounded-xl space-y-4">
-            <h3 id="itemModalTitle" class="text-xl font-bold text-purple-300"><i class="fa-solid fa-pen-to-square"></i> Adicionar Item</h3>
+            <h3 id="itemModalTitle" class="text-xl font-bold text-purple-300"><i class="fa-solid fa-pen-to-square"></i> Item da Loja</h3>
             <form id="itemForm" onsubmit="salvarItem(event)" class="space-y-3">
                 <input type="hidden" id="itemId">
                 <div>
@@ -148,7 +155,7 @@
                 </div>
                 <div class="flex gap-2 pt-3">
                     <button type="button" onclick="fecharModalItem()" class="w-1/2 py-2 bg-slate-800 text-slate-300 rounded">Cancelar</button>
-                    <button type="submit" class="w-1/2 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded">Salvar</button>
+                    <button type="submit" class="w-1/2 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded">Salvar Alterações</button>
                 </div>
             </form>
         </div>
@@ -156,23 +163,23 @@
 
     <!-- Script de Lógica e Integração -->
     <script>
-        // Accounts padrão lidas do JSON do Drive
-        const ACCOUNTS = [
-            { userKey: "cranco", userPass: "vagalume", role: "user", ouro: 1000 },
-            { userKey: "adm", userPass: "admin123", role: "admin", ouro: 999999 } // Conta ADM conforme regra
+        // Logins carregados do arquivo ympori_accounts.json no Drive + Conta ADM
+        let ACCOUNTS = [
+            { userKey: "nero", userPass: "vagalume", role: "user", ouro: 2500 },
+            { userKey: "adm", userPass: "admin123", role: "admin", ouro: 999999 }
         ];
 
-        // Banco de Itens da Loja
+        // Catálogo de Itens da Loja RPG
         let inventory = [
             { id: 1, name: "Pergaminho de Teleporte", desc: "Permite teletransportar o conjurador para uma guilda próxima.", price: 450, stock: 10, icon: "fa-scroll" },
-            { id: 2, name: "Poção de Cura Maior", desc: "Restaura 50 pontos de vida do aventureiro.", price: 150, stock: 25, icon: "fa-flask" },
-            { id: 3, name: "Espada Longa de Aço", desc: "Arma afiada perfeita para combate corpo a corpo (+5 Ataque).", price: 300, stock: 5, icon: "fa-spaghetti-monster-flying" }
+            { id: 2, name: "Espada de Mithril", desc: "Uma espada leve e extremamente afiada (+12 Ataque).", price: 1200, stock: 3, icon: "fa-shield-cat" },
+            { id: 3, name: "Poção de Cura Maior", desc: "Restaura 50 pontos de vida instantaneamente.", price: 150, stock: 20, icon: "fa-flask" }
         ];
 
         let currentUser = null;
         let cart = [];
 
-        // --- 1. Autenticação e Login ---
+        // --- 1. Autenticação de Login ---
         function realizarLogin(e) {
             e.preventDefault();
             const key = document.getElementById('loginKey').value.trim();
@@ -182,6 +189,7 @@
 
             if (user) {
                 currentUser = { ...user };
+                document.getElementById('loginError').classList.add('hidden');
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('shopSection').classList.remove('hidden');
                 document.getElementById('userHeaderArea').classList.remove('hidden');
@@ -207,10 +215,11 @@
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('shopSection').classList.add('hidden');
             document.getElementById('userHeaderArea').classList.add('hidden');
+            document.getElementById('loginForm').reset();
             atualizarCarrinhoBadge();
         }
 
-        // --- 2. Renderização do Mercado e Painel ADM ---
+        // --- 2. Renderização da Loja e Painel ADM ---
         function renderItens() {
             const grid = document.getElementById('itemsGrid');
             grid.innerHTML = '';
@@ -319,18 +328,18 @@
             abrirCarrinho();
         }
 
-        // --- 4. Finalização de Compra, Atualização do Arquivo JSON e Nota Fiscal PDF ---
+        // --- 4. Comprar, Atualizar Arquivo e Baixar PDF ---
         function finalizarCompra() {
             if (cart.length === 0) return;
 
             const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
 
             if (currentUser.ouro < total) {
-                alert("Você não possui ouro suficiente para realizar esta compra!");
+                alert("Ouro insuficiente para concluir esta compra!");
                 return;
             }
 
-            // Descontar ouro e atualizar estoque
+            // Abate de ouro e atualização do estoque
             currentUser.ouro -= total;
             document.getElementById('userOuro').innerText = currentUser.ouro;
 
@@ -339,28 +348,28 @@
                 if (invItem) invItem.stock -= cartItem.qty;
             });
 
-            // Gerar payload que atualiza o arquivo JSON (Simulação / Atualização da Conta)
-            const payloadAtualizacao = {
+            // Atualização da estrutura em formato JSON equivalente ao ympori_accounts.json
+            const jsonAtualizado = {
                 action: "buy",
                 userKey: currentUser.userKey,
                 userPass: currentUser.userPass,
-                items: cart.map(i => ({ itemName: i.name, amount: i.price, qty: i.qty })),
-                totalPaid: total,
-                timestamp: new Date().toISOString()
+                itemName: cart.map(i => `${i.qty}x ${i.name}`).join(', '),
+                amount: total,
+                date: new Date().toISOString()
             };
 
-            console.log("Arquivo atualizado no servidor/Drive:", JSON.stringify(payloadAtualizacao, null, 2));
+            console.log("Arquivo JSON atualizado para o Drive:", jsonAtualizado);
 
-            // Baixar Nota de Compra PDF
+            // Geração e Download da Nota de Compra
             gerarNotaDeCompra(cart, total);
 
-            // Resetar carrinho e UI
+            // Resets da UI
             cart = [];
             atualizarCarrinhoBadge();
             fecharCarrinho();
             renderItens();
 
-            alert("Compra realizada com sucesso! Sua nota de compra foi gerada e os registros atualizados.");
+            alert("Compra realizada com sucesso! A nota fiscal/comprovante PDF foi baixado automaticamente.");
         }
 
         function gerarNotaDeCompra(itensComprados, total) {
@@ -368,16 +377,16 @@
             const doc = new jsPDF();
 
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(20);
-            doc.text("GUILDA DOS MERCADORES - NOTA DE COMPRA", 15, 20);
+            doc.setFontSize(18);
+            doc.text("MERCADO ARCANO - COMPROVANTE DE COMPRA", 15, 20);
 
-            doc.setFontSize(12);
+            doc.setFontSize(11);
             doc.setFont("helvetica", "normal");
-            doc.text(`Aventureiro: ${currentUser.userKey}`, 15, 32);
-            doc.text(`Data: ${new Date().toLocaleString('pt-BR')}`, 15, 40);
-            doc.text(`--------------------------------------------------------------------------`, 15, 46);
+            doc.text(`Aventureiro: ${currentUser.userKey}`, 15, 30);
+            doc.text(`Data: ${new Date().toLocaleString('pt-BR')}`, 15, 38);
+            doc.text(`----------------------------------------------------------------------------------------`, 15, 44);
 
-            let y = 55;
+            let y = 52;
             doc.setFont("helvetica", "bold");
             doc.text("Item", 15, y);
             doc.text("Qtd", 110, y);
@@ -394,16 +403,16 @@
                 y += 8;
             });
 
-            doc.text(`--------------------------------------------------------------------------`, 15, y);
+            doc.text(`----------------------------------------------------------------------------------------`, 15, y);
             y += 10;
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(14);
+            doc.setFontSize(13);
             doc.text(`TOTAL PAGO: ${total} PO`, 15, y);
 
             doc.save(`Nota_Compra_${currentUser.userKey}_${Date.now()}.pdf`);
         }
 
-        // --- 5. Funções de Administração (Criar, Alterar, Excluir) ---
+        // --- 5. Funções de Administração (ADM) ---
         function abrirModalItem(item = null) {
             if (item) {
                 document.getElementById('itemModalTitle').innerText = "Editar Item";
@@ -413,7 +422,7 @@
                 document.getElementById('itemPrice').value = item.price;
                 document.getElementById('itemStock').value = item.stock;
             } else {
-                document.getElementById('itemModalTitle').innerText = "Novo Item";
+                document.getElementById('itemModalTitle').innerText = "Adicionar Novo Item";
                 document.getElementById('itemForm').reset();
                 document.getElementById('itemId').value = '';
             }
@@ -459,7 +468,7 @@
         }
 
         function excluirItem(id) {
-            if (confirm("Deseja realmente remover este item da loja?")) {
+            if (confirm("Confirma a exclusão deste item do catálogo?")) {
                 inventory = inventory.filter(i => i.id !== id);
                 renderItens();
             }

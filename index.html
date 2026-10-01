@@ -11,19 +11,19 @@
     <!-- jsPDF para Gerar e Baixar Comprovante em PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: sans-serif; }
-        .rpg-card { background: rgba(30, 41, 59, 0.85); border: 1px solid #334155; }
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .rpg-card { background: rgba(30, 41, 59, 0.85); border: 1px solid #334155; backdrop-filter: blur(8px); }
         .gold-text { color: #fbbf24; text-shadow: 0 0 8px rgba(251, 191, 36, 0.3); }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Header -->
+    <!-- Header / Navbar -->
     <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-shield-halved text-amber-400 text-3xl"></i>
-                <h1 class="text-2xl font-bold gold-text">Mercado Arcano</h1>
+                <h1 class="text-2xl font-bold tracking-wider gold-text">Mercado Arcano</h1>
             </div>
 
             <!-- Dados do Usuário Logado -->
@@ -34,11 +34,11 @@
                 <span class="text-amber-400 font-bold flex items-center gap-1">
                     <i class="fa-solid fa-coins"></i> Saldo: <span id="userOuro">0</span> Y
                 </span>
-                <button onclick="abrirCarrinho()" class="relative p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-amber-400">
+                <button onclick="abrirCarrinho()" class="relative p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-amber-400 transition">
                     <i class="fa-solid fa-cart-shopping text-xl"></i>
                     <span id="cartCount" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
                 </button>
-                <button onclick="logout()" class="p-2 bg-red-900/40 hover:bg-red-800/60 text-red-300 rounded-lg text-sm">
+                <button onclick="logout()" class="p-2 bg-red-900/40 hover:bg-red-800/60 text-red-300 rounded-lg text-sm transition">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
             </div>
@@ -58,13 +58,13 @@
             <form id="loginForm" onsubmit="realizarLogin(event)" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Nome do Usuário (ex: nero, victor, ADM)</label>
-                    <input type="text" id="loginKey" placeholder="Informe seu login" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white">
+                    <input type="text" id="loginKey" placeholder="Informe seu login" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Senha (pass)</label>
-                    <input type="password" id="loginPass" placeholder="Sua senha" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white">
+                    <input type="password" id="loginPass" placeholder="Sua senha" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500">
                 </div>
-                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-3 rounded-lg transition mt-2">
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-3 rounded-lg transition duration-200 mt-2">
                     Entrar na Loja
                 </button>
             </form>
@@ -82,15 +82,18 @@
                         <p class="text-xs text-purple-300">Você possui acesso para criar, editar ou excluir itens do catálogo.</p>
                     </div>
                 </div>
-                <button onclick="abrirModalItem()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-semibold text-sm transition">
-                    <i class="fa-solid fa-plus"></i> Novo Item
+                <button onclick="abrirModalItem()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-semibold text-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Criar Novo Item
                 </button>
             </div>
 
-            <h2 class="text-2xl font-bold gold-text flex items-center gap-2">
-                <i class="fa-solid fa-store"></i> Itens da Guilda
-            </h2>
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold gold-text flex items-center gap-2">
+                    <i class="fa-solid fa-store"></i> Itens da Guilda
+                </h2>
+            </div>
 
+            <!-- Grid de Itens -->
             <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
     </main>
@@ -111,7 +114,7 @@
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button onclick="fecharCarrinho()" class="w-1/2 py-2 bg-slate-800 text-slate-300 rounded-lg">Voltar</button>
+                <button onclick="fecharCarrinho()" class="w-1/2 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">Voltar</button>
                 <button onclick="finalizarCompra()" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition">Finalizar e Baixar Nota</button>
             </div>
         </div>
@@ -143,7 +146,7 @@
                 </div>
                 <div class="flex gap-2 pt-3">
                     <button type="button" onclick="fecharModalItem()" class="w-1/2 py-2 bg-slate-800 text-slate-300 rounded">Cancelar</button>
-                    <button type="submit" class="w-1/2 py-2 bg-purple-600 text-white font-bold rounded">Salvar</button>
+                    <button type="submit" class="w-1/2 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded">Salvar</button>
                 </div>
             </form>
         </div>
@@ -151,7 +154,7 @@
 
     <!-- Lógica JS -->
     <script>
-        // URL da implantação do Apps Script
+        // COLE AQUI A URL GERADA NA IMPLANTAÇÃO DO SEU GOOGLE APPS SCRIPT
         const APPS_SCRIPT_URL = 'COLE_SUA_URL_DO_APPS_SCRIPT_AQUI';
 
         let rawDriveData = {};
@@ -181,7 +184,7 @@
                 }
 
                 rawDriveData = {};
-                // Pega apenas os objetos das contas (chaves que contêm a propriedade pass)
+                // Filtra apenas os objetos das contas (chaves que contêm a propriedade pass)
                 Object.keys(data).forEach(key => {
                     if (data[key] && typeof data[key] === 'object' && data[key].pass !== undefined) {
                         rawDriveData[key] = data[key];
@@ -219,7 +222,7 @@
                     key: matchedKey,
                     name: acc.name || matchedKey,
                     pass: acc.pass,
-                    balance: acc.balance !== null ? acc.balance : 999999, // Lê o saldo de "balance"
+                    balance: acc.balance !== null ? acc.balance : 999999, // Saldo inicial lido de "balance"
                     isAdmin: !!acc.isAdmin
                 };
 
@@ -261,7 +264,7 @@
             inventory.forEach(item => {
                 const isAdmin = currentUser && currentUser.isAdmin;
                 const card = document.createElement('div');
-                card.className = "rpg-card p-5 rounded-xl flex flex-col justify-between";
+                card.className = "rpg-card p-5 rounded-xl flex flex-col justify-between hover:border-amber-500/50 transition";
 
                 card.innerHTML = `
                     <div>
@@ -271,8 +274,8 @@
                             </span>
                             ${isAdmin ? `
                                 <div class="flex gap-2">
-                                    <button onclick="editarItem(${item.id})" class="text-purple-400 p-1"><i class="fa-solid fa-pen"></i></button>
-                                    <button onclick="excluirItem(${item.id})" class="text-red-400 p-1"><i class="fa-solid fa-trash"></i></button>
+                                    <button onclick="editarItem(${item.id})" class="text-purple-400 hover:text-purple-300 p-1"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="excluirItem(${item.id})" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash"></i></button>
                                 </div>
                             ` : ''}
                         </div>
@@ -294,7 +297,7 @@
             });
         }
 
-        // Operações de Carrinho
+        // Operações do Carrinho
         function adicionarAoCarrinho(itemId) {
             const item = inventory.find(i => i.id === itemId);
             if (!item || item.stock <= 0) return;
@@ -361,25 +364,30 @@
             abrirCarrinho();
         }
 
+        // Finalizar Compra e Atualizar Saldo no Drive
         async function finalizarCompra() {
             if (cart.length === 0) return;
             const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
 
-            if (currentUser.balance < total && !currentUser.isAdmin) {
+            // Validação do saldo
+            if (currentUser.balance !== null && currentUser.balance < total && !currentUser.isAdmin) {
                 alert("Você não possui saldo suficiente para realizar esta compra!");
                 return;
             }
 
-            if (!currentUser.isAdmin) {
+            // Abater saldo no estado local
+            if (!currentUser.isAdmin && currentUser.balance !== null) {
                 currentUser.balance -= total;
                 document.getElementById('userOuro').innerText = currentUser.balance;
             }
 
+            // Abater estoque local
             cart.forEach(cartItem => {
                 const invItem = inventory.find(i => i.id === cartItem.id);
                 if (invItem) invItem.stock -= cartItem.qty;
             });
 
+            // Payload para atualizar o campo "balance" no arquivo do Google Drive
             const payload = {
                 userKey: currentUser.key,
                 userPass: currentUser.pass,
@@ -389,21 +397,27 @@
             };
 
             if (!APPS_SCRIPT_URL.includes('COLE_SUA_URL')) {
-                fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                try {
+                    await fetch(APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (err) {
+                    console.error("Erro ao sincronizar saldo com o Drive:", err);
+                }
             }
 
+            // Gerar Nota Fiscal em PDF
             gerarNotaDeCompra(cart, total);
 
+            // Limpar estado do carrinho
             cart = [];
             atualizarCarrinhoBadge();
             fecharCarrinho();
             renderItens();
-            alert("Compra concluída com sucesso! O comprovante em PDF foi baixado.");
+
+            alert("Compra realizada com sucesso! O novo saldo foi gravado no Google Drive e a nota em PDF foi baixada.");
         }
 
         function gerarNotaDeCompra(itensComprados, total) {
@@ -446,6 +460,7 @@
             doc.save(`Nota_Compra_${currentUser.key}_${Date.now()}.pdf`);
         }
 
+        // Funções da Administração
         function abrirModalItem(item = null) {
             if (item) {
                 document.getElementById('itemModalTitle').innerText = "Editar Item";

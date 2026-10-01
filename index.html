@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nossa Loja Virtual</title>
+  <!-- Biblioteca jsPDF para gerar o PDF direto no navegador -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { margin: 0; padding: 0; background-color: #f4f6f8; color: #333; }
@@ -70,7 +72,7 @@
         <p>O carrinho está vazio.</p>
       </div>
       <div class="total">Total: R$ <span id="valor-total">0.00</span></div>
-      <button class="btn-comprar" onclick="finalizarCompra()">Comprar e Baixar Nota</button>
+      <button class="btn-comprar" onclick="finalizarCompra()">Comprar e Baixar Nota PDF</button>
     </div>
   </div>
 
@@ -145,12 +147,9 @@
       statusDiv.style.color = "#e67e22";
       statusDiv.innerText = "Salvando alterações no Google Drive...";
 
-      // Envia como text/plain para contornar o bloqueio de CORS do navegador
       fetch(API_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8"
-        },
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(produtos)
       })
       .then(res => res.json())
@@ -161,7 +160,6 @@
         setTimeout(() => { statusDiv.innerText = ""; }, 3000);
       })
       .catch(err => {
-        // Fallback caso res.json() falhe devido a redirecionamento
         statusDiv.style.color = "#27ae60";
         statusDiv.innerText = "Salvo com sucesso!";
         setTimeout(() => { 
@@ -239,6 +237,7 @@
       document.getElementById("valor-total").innerText = total.toFixed(2);
     }
 
+    // Gerar e Baixar Nota em PDF
     function finalizarCompra() {
       const keys = Object.keys(carrinho);
       if (keys.length === 0) {
@@ -246,39 +245,78 @@
         return;
       }
 
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
       let dataAtual = new Date().toLocaleString("pt-BR");
-      let conteudoNota = "=========================================\n";
-      conteudoNota += "           COMPROVANTE DE COMPRA         \n";
-      conteudoNota += "=========================================\n";
-      conteudoNota += `Data: ${dataAtual}\n\n`;
-      conteudoNota += "ITENS COMPRADOS:\n";
-      conteudoNota += "-----------------------------------------\n";
+
+      // Cabeçalho da Nota
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("COMPROVANTE DE COMPRA", 105, 20, { align: "center" });
+
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Data/Hora: ${dataAtual}`, 20, 30);
+      doc.line(20, 35, 190, 35); // Linha divisória
+
+      // Colunas da Tabela
+      let y = 45;
+      doc.setFont("helvetica", "bold");
+      doc.text("Item", 20, y);
+      doc.text("Qtd", 100, y);
+      doc.text("Preço Unit.", 130, y);
+      doc.text("Subtotal", 165, y);
+      
+      y += 6;
+      doc.line(20, y, 190, y);
+      y += 10;
 
       let total = 0;
+      doc.setFont("helvetica", "normal");
+
       keys.forEach(id => {
         const prod = produtos.find(p => p.id == id);
         if (prod) {
           const qtd = carrinho[id];
           const subtotal = prod.preco * qtd;
           total += subtotal;
-          conteudoNota += `${prod.nome.padEnd(20, ' ')} | Qtd: ${qtd} | Unit: R$ ${parseFloat(prod.preco).toFixed(2)} | Sub: R$ ${subtotal.toFixed(2)}\n`;
+
+          doc.text(prod.nome, 20, y);
+          doc.text(String(qtd), 105, y);
+          doc.text(`R$ ${parseFloat(prod.preco).toFixed(2)}`, 130, y);
+          doc.text(`R$ ${subtotal.toFixed(2)}`, 165, y);
+          y += 10;
         }
       });
 
-      conteudoNota += "-----------------------------------------\n";
-      conteudoNota += `VALOR TOTAL: R$ ${total.toFixed(2)}\n`;
-      conteudoNota += "=========================================\n";
-      conteudoNota += "       Obrigado pela sua compra!         \n";
+      doc.line(20, y, 190, y);
+      y += 10;
 
-      const blob = new Blob([conteudoNota], { type: "text/plain;charset=utf-8" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `Nota_Compra_${Date.now()}.txt`;
-      link.click();
+      // Valor Total
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text(`VALOR TOTAL: R$ ${total.toFixed(2)}`, 190, y, { align: "right" });
 
+      y += 20;
+      doc.line(20, y, 190, y);
+      y += 15;
+
+      // Instrução de Transferência
+      doc.setFontSize(12);
+      doc.setTextColor(192, 57, 43); // Cor destacada (vermelho/escuro)
+      doc.text("Instrução de Pagamento:", 20, y);
+      y += 8;
+      doc.setFont("helvetica", "bold");
+      doc.text("Transferir para: YMP-6607", 20, y);
+
+      // Salvar PDF
+      doc.save(`Nota_Compra_${Date.now()}.pdf`);
+
+      // Limpar carrinho
       carrinho = {};
       renderizarCarrinho();
-      alert("Compra realizada com sucesso! Sua nota foi baixada.");
+      alert("Compra realizada com sucesso! O comprovante em PDF foi baixado.");
     }
 
     function abrirModalLogin() {

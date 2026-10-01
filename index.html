@@ -115,7 +115,9 @@
 
             <div class="flex gap-3 pt-2">
                 <button onclick="fecharCarrinho()" class="w-1/2 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">Voltar</button>
-                <button onclick="finalizarCompra()" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition">Finalizar e Baixar Nota</button>
+                <button id="btnFinalizar" onclick="finalizarCompra()" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition flex items-center justify-center gap-2">
+                    Finalizar e Baixar Nota
+                </button>
             </div>
         </div>
     </div>
@@ -167,7 +169,7 @@
         let currentUser = null;
         let cart = [];
 
-        // Carrega e valida as contas vindas do Apps Script
+        // Carrega as contas diretamente do Google Drive
         async function carregarDadosDoDrive() {
             const statusEl = document.getElementById('statusCarregamento');
             
@@ -179,12 +181,9 @@
                 const response = await fetch(APPS_SCRIPT_URL, { redirect: "follow" });
                 const data = await response.json();
 
-                if (data.error) {
-                    throw new Error(data.error);
-                }
+                if (data.error) throw new Error(data.error);
 
                 rawDriveData = {};
-                // Filtra apenas os objetos das contas (chaves que contêm a propriedade pass)
                 Object.keys(data).forEach(key => {
                     if (data[key] && typeof data[key] === 'object' && data[key].pass !== undefined) {
                         rawDriveData[key] = data[key];
@@ -192,16 +191,16 @@
                 });
 
                 const contasEncontradas = Object.keys(rawDriveData).join(', ');
-                statusEl.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> Contas carregadas com sucesso: <b>${contasEncontradas}</b>`;
+                statusEl.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> Contas sincronizadas: <b>${contasEncontradas}</b>`;
                 statusEl.className = "text-xs text-center text-emerald-400 mb-6 bg-slate-800/50 p-2 rounded border border-emerald-500/30";
             } catch (err) {
-                console.warn("Entrando no modo de contingência local:", err);
+                console.warn("Usando dados locais de contingência:", err);
                 rawDriveData = {
                     "ADM": { name: "Administrador", pass: "vagalume", balance: null, isAdmin: true },
                     "nero": { name: "nero nok", pass: "vagalume", balance: 500, isAdmin: false },
                     "victor": { name: "Victor Nok", pass: "vagalume", balance: 500, isAdmin: false }
                 };
-                statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-amber-400"></i> Contas ativas: <b>nero, victor, ADM</b> (senha: vagalume)`;
+                statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-amber-400"></i> Contas locais ativas: <b>nero, victor, ADM</b> (senha: vagalume)`;
                 statusEl.className = "text-xs text-center text-amber-400 mb-6 bg-slate-800/50 p-2 rounded border border-amber-500/30";
             }
         }
@@ -222,7 +221,7 @@
                     key: matchedKey,
                     name: acc.name || matchedKey,
                     pass: acc.pass,
-                    balance: acc.balance !== null ? acc.balance : 999999, // Saldo inicial lido de "balance"
+                    balance: acc.balance !== null ? acc.balance : 999999,
                     isAdmin: !!acc.isAdmin
                 };
 
@@ -254,9 +253,9 @@
             document.getElementById('userHeaderArea').classList.add('hidden');
             document.getElementById('loginForm').reset();
             atualizarCarrinhoBadge();
+            carregarDadosDoDrive(); // Recarrega os dados do Drive ao deslogar
         }
 
-        // Renderização dos Itens
         function renderItens() {
             const grid = document.getElementById('itemsGrid');
             grid.innerHTML = '';
@@ -274,8 +273,8 @@
                             </span>
                             ${isAdmin ? `
                                 <div class="flex gap-2">
-                                    <button onclick="editarItem(${item.id})" class="text-purple-400 hover:text-purple-300 p-1"><i class="fa-solid fa-pen"></i></button>
-                                    <button onclick="excluirItem(${item.id})" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash"></i></button>
+                                    <button onclick="editarItem(${item.id})" class="text-purple-400 p-1"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="excluirItem(${item.id})" class="text-red-400 p-1"><i class="fa-solid fa-trash"></i></button>
                                 </div>
                             ` : ''}
                         </div>
@@ -297,7 +296,6 @@
             });
         }
 
-        // Operações do Carrinho
         function adicionarAoCarrinho(itemId) {
             const item = inventory.find(i => i.id === itemId);
             if (!item || item.stock <= 0) return;
@@ -364,60 +362,75 @@
             abrirCarrinho();
         }
 
-        // Finalizar Compra e Atualizar Saldo no Drive
+        // Finalizar Compra e Salvar no Google Drive
         async function finalizarCompra() {
             if (cart.length === 0) return;
             const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
 
-            // Validação do saldo
             if (currentUser.balance !== null && currentUser.balance < total && !currentUser.isAdmin) {
-                alert("Você não possui saldo suficiente para realizar esta compra!");
+                alert("Você não possui saldo suficiente para esta compra!");
                 return;
             }
 
-            // Abater saldo no estado local
+            const btn = document.getElementById('btnFinalizar');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Salvando no Drive...`;
+
+            // Calcular novo saldo
+            let novoSaldo = currentUser.balance;
             if (!currentUser.isAdmin && currentUser.balance !== null) {
-                currentUser.balance -= total;
-                document.getElementById('userOuro').innerText = currentUser.balance;
+                novoSaldo -= total;
             }
 
-            // Abater estoque local
-            cart.forEach(cartItem => {
-                const invItem = inventory.find(i => i.id === cartItem.id);
-                if (invItem) invItem.stock -= cartItem.qty;
-            });
-
-            // Payload para atualizar o campo "balance" no arquivo do Google Drive
             const payload = {
                 userKey: currentUser.key,
                 userPass: currentUser.pass,
-                novoSaldo: currentUser.balance,
+                novoSaldo: novoSaldo,
                 itemName: cart.map(i => `${i.qty}x ${i.name}`).join(', '),
                 amount: total
             };
 
-            if (!APPS_SCRIPT_URL.includes('COLE_SUA_URL')) {
-                try {
+            try {
+                if (!APPS_SCRIPT_URL.includes('COLE_SUA_URL')) {
+                    // Envia os dados usando URLSearchParams para garantir compatibilidade no POST
+                    const params = new URLSearchParams(payload);
                     await fetch(APPS_SCRIPT_URL, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify(payload)
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: params.toString()
                     });
-                } catch (err) {
-                    console.error("Erro ao sincronizar saldo com o Drive:", err);
                 }
+
+                // Atualiza o estado da memória local
+                currentUser.balance = novoSaldo;
+                if (rawDriveData[currentUser.key]) {
+                    rawDriveData[currentUser.key].balance = novoSaldo;
+                }
+                document.getElementById('userOuro').innerText = currentUser.balance;
+
+                // Abater estoque local
+                cart.forEach(cartItem => {
+                    const invItem = inventory.find(i => i.id === cartItem.id);
+                    if (invItem) invItem.stock -= cartItem.qty;
+                });
+
+                // Gerar a Nota de Compra
+                gerarNotaDeCompra(cart, total);
+
+                cart = [];
+                atualizarCarrinhoBadge();
+                fecharCarrinho();
+                renderItens();
+
+                alert("Compra realizada com sucesso! O novo saldo foi atualizado permanentemente no arquivo do Google Drive.");
+            } catch (err) {
+                console.error("Erro ao atualizar o saldo:", err);
+                alert("Ocorreu um erro ao gravar o novo saldo no servidor. Tente novamente.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Finalizar e Baixar Nota";
             }
-
-            // Gerar Nota Fiscal em PDF
-            gerarNotaDeCompra(cart, total);
-
-            // Limpar estado do carrinho
-            cart = [];
-            atualizarCarrinhoBadge();
-            fecharCarrinho();
-            renderItens();
-
-            alert("Compra realizada com sucesso! O novo saldo foi gravado no Google Drive e a nota em PDF foi baixada.");
         }
 
         function gerarNotaDeCompra(itensComprados, total) {

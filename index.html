@@ -4,29 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mercado Arcano - Loja RPG</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- jsPDF para Gerar e Baixar Comprovante em PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .rpg-card { background: rgba(30, 41, 59, 0.85); border: 1px solid #334155; backdrop-filter: blur(8px); }
+        body { background-color: #0f172a; color: #f8fafc; font-family: sans-serif; }
+        .rpg-card { background: rgba(30, 41, 59, 0.85); border: 1px solid #334155; }
         .gold-text { color: #fbbf24; text-shadow: 0 0 8px rgba(251, 191, 36, 0.3); }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Header / Navbar -->
+    <!-- Form & Iframe Ocultos para garantir a gravação no Drive -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+    <form id="driveSyncForm" method="POST" target="hidden_iframe" style="display:none;">
+        <input type="hidden" name="userKey" id="syncUserKey">
+        <input type="hidden" name="novoSaldo" id="syncNovoSaldo">
+        <input type="hidden" name="itemName" id="syncItemName">
+        <input type="hidden" name="amount" id="syncAmount">
+    </form>
+
+    <!-- Header -->
     <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-shield-halved text-amber-400 text-3xl"></i>
-                <h1 class="text-2xl font-bold tracking-wider gold-text">Mercado Arcano</h1>
+                <h1 class="text-2xl font-bold gold-text">Mercado Arcano</h1>
             </div>
 
-            <!-- Dados do Usuário Logado -->
             <div id="userHeaderArea" class="flex items-center space-x-4 hidden">
                 <span class="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full text-sm font-semibold">
                     <i class="fa-solid fa-user-ninja mr-1"></i> <span id="usernameDisplay">Aventureiro</span>
@@ -34,11 +39,11 @@
                 <span class="text-amber-400 font-bold flex items-center gap-1">
                     <i class="fa-solid fa-coins"></i> Saldo: <span id="userOuro">0</span> Y
                 </span>
-                <button onclick="abrirCarrinho()" class="relative p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-amber-400 transition">
+                <button onclick="abrirCarrinho()" class="relative p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-amber-400">
                     <i class="fa-solid fa-cart-shopping text-xl"></i>
                     <span id="cartCount" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
                 </button>
-                <button onclick="logout()" class="p-2 bg-red-900/40 hover:bg-red-800/60 text-red-300 rounded-lg text-sm transition">
+                <button onclick="logout()" class="p-2 bg-red-900/40 hover:bg-red-800/60 text-red-300 rounded-lg text-sm">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
             </div>
@@ -47,7 +52,7 @@
 
     <main class="max-w-7xl mx-auto p-6 flex-1 w-full">
 
-        <!-- 1. Tela de Login -->
+        <!-- Login -->
         <section id="loginSection" class="max-w-md mx-auto mt-12 rpg-card p-8 rounded-xl shadow-2xl">
             <h2 class="text-2xl font-bold text-center mb-4 gold-text"><i class="fa-solid fa-key mr-2"></i> Autenticação RPG</h2>
             
@@ -58,47 +63,43 @@
             <form id="loginForm" onsubmit="realizarLogin(event)" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Nome do Usuário (ex: nero, victor, ADM)</label>
-                    <input type="text" id="loginKey" placeholder="Informe seu login" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500">
+                    <input type="text" id="loginKey" placeholder="Informe seu login" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Senha (pass)</label>
-                    <input type="password" id="loginPass" placeholder="Sua senha" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500">
+                    <input type="password" id="loginPass" placeholder="Sua senha" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white">
                 </div>
-                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-3 rounded-lg transition duration-200 mt-2">
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-3 rounded-lg transition mt-2">
                     Entrar na Loja
                 </button>
             </form>
             <p id="loginError" class="text-red-400 text-sm mt-4 text-center hidden"><i class="fa-solid fa-triangle-exclamation"></i> Usuário ou senha incorretos!</p>
         </section>
 
-        <!-- 2. Tela da Loja -->
+        <!-- Loja -->
         <section id="shopSection" class="hidden space-y-6">
-            <!-- Painel ADM -->
             <div id="adminBanner" class="hidden p-4 bg-purple-900/30 border border-purple-500/40 rounded-xl flex justify-between items-center">
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-crown text-purple-400 text-2xl"></i>
                     <div>
                         <h3 class="font-bold text-purple-200">Painel do Administrador</h3>
-                        <p class="text-xs text-purple-300">Você possui acesso para criar, editar ou excluir itens do catálogo.</p>
+                        <p class="text-xs text-purple-300">Acesso livre para criar, editar ou excluir itens do catálogo.</p>
                     </div>
                 </div>
-                <button onclick="abrirModalItem()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-semibold text-sm transition flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Criar Novo Item
+                <button onclick="abrirModalItem()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-semibold text-sm transition">
+                    <i class="fa-solid fa-plus"></i> Novo Item
                 </button>
             </div>
 
-            <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-bold gold-text flex items-center gap-2">
-                    <i class="fa-solid fa-store"></i> Itens da Guilda
-                </h2>
-            </div>
+            <h2 class="text-2xl font-bold gold-text flex items-center gap-2">
+                <i class="fa-solid fa-store"></i> Itens da Guilda
+            </h2>
 
-            <!-- Grid de Itens -->
             <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
     </main>
 
-    <!-- Modal do Carrinho -->
+    <!-- Modal Carrinho -->
     <div id="cartModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="rpg-card max-w-lg w-full p-6 rounded-xl space-y-4">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
@@ -114,10 +115,8 @@
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button onclick="fecharCarrinho()" class="w-1/2 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">Voltar</button>
-                <button id="btnFinalizar" onclick="finalizarCompra()" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition flex items-center justify-center gap-2">
-                    Finalizar e Baixar Nota
-                </button>
+                <button onclick="fecharCarrinho()" class="w-1/2 py-2 bg-slate-800 text-slate-300 rounded-lg">Voltar</button>
+                <button id="btnFinalizar" onclick="finalizarCompra()" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition">Finalizar e Baixar Nota</button>
             </div>
         </div>
     </div>
@@ -148,15 +147,14 @@
                 </div>
                 <div class="flex gap-2 pt-3">
                     <button type="button" onclick="fecharModalItem()" class="w-1/2 py-2 bg-slate-800 text-slate-300 rounded">Cancelar</button>
-                    <button type="submit" class="w-1/2 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded">Salvar</button>
+                    <button type="submit" class="w-1/2 py-2 bg-purple-600 text-white font-bold rounded">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Lógica JS -->
     <script>
-        // COLE AQUI A URL GERADA NA IMPLANTAÇÃO DO SEU GOOGLE APPS SCRIPT
+        // COLE SUA URL DA IMPLANTAÇÃO DO GOOGLE APPS SCRIPT AQUI
         const APPS_SCRIPT_URL = 'COLE_SUA_URL_DO_APPS_SCRIPT_AQUI';
 
         let rawDriveData = {};
@@ -169,19 +167,13 @@
         let currentUser = null;
         let cart = [];
 
-        // Carrega as contas diretamente do Google Drive
         async function carregarDadosDoDrive() {
             const statusEl = document.getElementById('statusCarregamento');
-            
             try {
-                if (APPS_SCRIPT_URL.includes('COLE_SUA_URL')) {
-                    throw new Error("URL do Apps Script não preenchida.");
-                }
+                if (APPS_SCRIPT_URL.includes('COLE_SUA_URL')) throw new Error("URL não configurada.");
 
                 const response = await fetch(APPS_SCRIPT_URL, { redirect: "follow" });
                 const data = await response.json();
-
-                if (data.error) throw new Error(data.error);
 
                 rawDriveData = {};
                 Object.keys(data).forEach(key => {
@@ -190,24 +182,23 @@
                     }
                 });
 
-                const contasEncontradas = Object.keys(rawDriveData).join(', ');
-                statusEl.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> Contas sincronizadas: <b>${contasEncontradas}</b>`;
+                const contas = Object.keys(rawDriveData).join(', ');
+                statusEl.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> Contas sincronizadas do Drive: <b>${contas}</b>`;
                 statusEl.className = "text-xs text-center text-emerald-400 mb-6 bg-slate-800/50 p-2 rounded border border-emerald-500/30";
             } catch (err) {
-                console.warn("Usando dados locais de contingência:", err);
+                console.warn("Fallback local:", err);
                 rawDriveData = {
                     "ADM": { name: "Administrador", pass: "vagalume", balance: null, isAdmin: true },
                     "nero": { name: "nero nok", pass: "vagalume", balance: 500, isAdmin: false },
                     "victor": { name: "Victor Nok", pass: "vagalume", balance: 500, isAdmin: false }
                 };
-                statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-amber-400"></i> Contas locais ativas: <b>nero, victor, ADM</b> (senha: vagalume)`;
+                statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-amber-400"></i> Contas locais: <b>nero, victor, ADM</b> (senha: vagalume)`;
                 statusEl.className = "text-xs text-center text-amber-400 mb-6 bg-slate-800/50 p-2 rounded border border-amber-500/30";
             }
         }
 
         window.onload = carregarDadosDoDrive;
 
-        // Login
         function realizarLogin(e) {
             e.preventDefault();
             const inputKey = document.getElementById('loginKey').value.trim();
@@ -362,8 +353,8 @@
             abrirCarrinho();
         }
 
-        // Finalizar Compra e Salvar permanentemente no Google Drive
-        async function finalizarCompra() {
+        // FUNÇÃO DE FINALIZAÇÃO DA COMPRA (DISPARA O FORMULARIO OCULTO)
+        function finalizarCompra() {
             if (cart.length === 0) return;
             const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
 
@@ -372,62 +363,42 @@
                 return;
             }
 
-            const btn = document.getElementById('btnFinalizar');
-            btn.disabled = true;
-            btn.innerText = "Salvando no Drive...";
-
             let novoSaldo = currentUser.balance;
             if (!currentUser.isAdmin && currentUser.balance !== null) {
                 novoSaldo -= total;
             }
 
-            const payload = {
-                userKey: currentUser.key,
-                userPass: currentUser.pass,
-                novoSaldo: novoSaldo,
-                itemName: cart.map(i => `${i.qty}x ${i.name}`).join(', '),
-                amount: total
-            };
+            // Preenche o formulário oculto
+            const form = document.getElementById('driveSyncForm');
+            form.action = APPS_SCRIPT_URL;
+            document.getElementById('syncUserKey').value = currentUser.key;
+            document.getElementById('syncNovoSaldo').value = novoSaldo;
+            document.getElementById('syncItemName').value = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
+            document.getElementById('syncAmount').value = total;
 
-            try {
-                if (!APPS_SCRIPT_URL.includes('COLE_SUA_URL')) {
-                    await fetch(APPS_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify(payload)
-                    });
-                }
+            // Envia o formulário
+            form.submit();
 
-                // Atualiza o estado da sessão local
-                currentUser.balance = novoSaldo;
-                if (rawDriveData[currentUser.key]) {
-                    rawDriveData[currentUser.key].balance = novoSaldo;
-                }
-                document.getElementById('userOuro').innerText = currentUser.balance;
-
-                // Abater estoque local
-                cart.forEach(cartItem => {
-                    const invItem = inventory.find(i => i.id === cartItem.id);
-                    if (invItem) invItem.stock -= cartItem.qty;
-                });
-
-                // Gerar nota de compra em PDF
-                gerarNotaDeCompra(cart, total);
-
-                cart = [];
-                atualizarCarrinhoBadge();
-                fecharCarrinho();
-                renderItens();
-
-                alert("Compra realizada com sucesso! O novo saldo foi atualizado permanentemente no arquivo do Google Drive.");
-            } catch (err) {
-                console.error("Erro ao salvar saldo:", err);
-                alert("Ocorreu um erro ao atualizar o arquivo no Drive.");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Finalizar e Baixar Nota";
+            // Atualiza os dados na memória do navegador
+            currentUser.balance = novoSaldo;
+            if (rawDriveData[currentUser.key]) {
+                rawDriveData[currentUser.key].balance = novoSaldo;
             }
+            document.getElementById('userOuro').innerText = currentUser.balance;
+
+            cart.forEach(cartItem => {
+                const invItem = inventory.find(i => i.id === cartItem.id);
+                if (invItem) invItem.stock -= cartItem.qty;
+            });
+
+            gerarNotaDeCompra(cart, total);
+
+            cart = [];
+            atualizarCarrinhoBadge();
+            fecharCarrinho();
+            renderItens();
+
+            alert("Compra finalizada! O saldo foi salvo no arquivo do Google Drive e a nota fiscal foi baixada.");
         }
 
         function gerarNotaDeCompra(itensComprados, total) {

@@ -253,7 +253,7 @@
             document.getElementById('userHeaderArea').classList.add('hidden');
             document.getElementById('loginForm').reset();
             atualizarCarrinhoBadge();
-            carregarDadosDoDrive(); // Recarrega os dados do Drive ao deslogar
+            carregarDadosDoDrive();
         }
 
         function renderItens() {
@@ -362,7 +362,7 @@
             abrirCarrinho();
         }
 
-        // Finalizar Compra e Salvar no Google Drive
+        // Finalizar Compra e Salvar permanentemente no Google Drive
         async function finalizarCompra() {
             if (cart.length === 0) return;
             const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
@@ -374,9 +374,8 @@
 
             const btn = document.getElementById('btnFinalizar');
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Salvando no Drive...`;
+            btn.innerText = "Salvando no Drive...";
 
-            // Calcular novo saldo
             let novoSaldo = currentUser.balance;
             if (!currentUser.isAdmin && currentUser.balance !== null) {
                 novoSaldo -= total;
@@ -392,17 +391,15 @@
 
             try {
                 if (!APPS_SCRIPT_URL.includes('COLE_SUA_URL')) {
-                    // Envia os dados usando URLSearchParams para garantir compatibilidade no POST
-                    const params = new URLSearchParams(payload);
                     await fetch(APPS_SCRIPT_URL, {
                         method: 'POST',
                         mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: params.toString()
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(payload)
                     });
                 }
 
-                // Atualiza o estado da memória local
+                // Atualiza o estado da sessão local
                 currentUser.balance = novoSaldo;
                 if (rawDriveData[currentUser.key]) {
                     rawDriveData[currentUser.key].balance = novoSaldo;
@@ -415,7 +412,7 @@
                     if (invItem) invItem.stock -= cartItem.qty;
                 });
 
-                // Gerar a Nota de Compra
+                // Gerar nota de compra em PDF
                 gerarNotaDeCompra(cart, total);
 
                 cart = [];
@@ -425,8 +422,8 @@
 
                 alert("Compra realizada com sucesso! O novo saldo foi atualizado permanentemente no arquivo do Google Drive.");
             } catch (err) {
-                console.error("Erro ao atualizar o saldo:", err);
-                alert("Ocorreu um erro ao gravar o novo saldo no servidor. Tente novamente.");
+                console.error("Erro ao salvar saldo:", err);
+                alert("Ocorreu um erro ao atualizar o arquivo no Drive.");
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Finalizar e Baixar Nota";
@@ -473,7 +470,6 @@
             doc.save(`Nota_Compra_${currentUser.key}_${Date.now()}.pdf`);
         }
 
-        // Funções da Administração
         function abrirModalItem(item = null) {
             if (item) {
                 document.getElementById('itemModalTitle').innerText = "Editar Item";

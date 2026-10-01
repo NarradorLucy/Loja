@@ -1,0 +1,523 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loja Oficial - Ympori Bank</title>
+    <style>
+        :root {
+            --primary: #8b7cff;
+            --primary-dark: #6e5fe0;
+            --bg-color: #080b14;
+            --card-bg: #111728;
+            --text-color: #eef2ff;
+            --muted: #929bb5;
+            --accent: #38d9c3;
+            --danger: #ff6685;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at 80% 0%, #25204d 0, #080b14 38%);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Tela de Login */
+        #login-screen {
+            max-width: 400px;
+            margin: 80px auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 18px;
+            border: 1px solid #28314a;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        #login-screen h2 { color: var(--primary); margin-top: 0; margin-bottom: 20px; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; font-size: 13px; color: var(--muted); }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #2b3550;
+            background: #0c1120;
+            color: #fff;
+            box-sizing: border-box;
+            outline: none;
+        }
+        .input-group input:focus { border-color: var(--primary); }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        .btn:hover { background-color: var(--primary-dark); }
+        .btn-danger { background-color: rgba(255,102,133,0.12); border: 1px solid rgba(255,102,133,0.3); color: var(--danger); }
+        .btn-danger:hover { background-color: var(--danger); color: #fff; }
+        .btn-success { background-color: var(--accent); color: #080b14; }
+        .btn-success:hover { background-color: #2ec4af; }
+
+        /* Conteúdo da Loja */
+        #store-content { display: none; max-width: 1100px; margin: 0 auto; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(145deg, rgba(23,30,50,.94), rgba(14,19,33,.94));
+            border: 1px solid #28314a;
+            padding: 20px;
+            border-radius: 18px;
+            box-shadow: 0 12px 40px rgba(0,0,0,.18);
+            margin-bottom: 25px;
+        }
+
+        h1 { margin: 0; font-size: 1.4rem; color: var(--primary); }
+        .user-info { display: flex; gap: 20px; align-items: center; }
+        .saldo-box { font-weight: 800; color: var(--accent); }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        @media(max-width: 768px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            align-content: start;
+        }
+
+        .product-card {
+            background: linear-gradient(145deg, rgba(23,30,50,.94), rgba(14,19,33,.94));
+            border: 1px solid #28314a;
+            border-radius: 18px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 12px 40px rgba(0,0,0,.18);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .product-icon { font-size: 3rem; margin-bottom: 10px; }
+        .product-title { font-size: 1.1rem; margin-bottom: 10px; }
+        .product-price { font-size: 1rem; color: #fbbf24; margin-bottom: 15px; font-weight: bold; }
+
+        /* Carrinho Lateral */
+        .cart-panel {
+            background: linear-gradient(145deg, rgba(23,30,50,.94), rgba(14,19,33,.94));
+            border: 1px solid #28314a;
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 12px 40px rgba(0,0,0,.18);
+            height: fit-content;
+        }
+
+        .cart-panel h3 { margin-top: 0; color: var(--primary); border-bottom: 1px solid #252d42; padding-bottom: 10px; }
+        
+        .cart-items-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 15px 0;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #252d42;
+        }
+
+        .cart-total {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Botão de exclusão para ADM */
+        .delete-card-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .delete-card-btn:hover { background-color: #e05572; }
+
+        /* Painel ADM */
+        #admin-panel {
+            background: #151b31;
+            border: 1px solid var(--primary);
+            padding: 20px;
+            border-radius: 18px;
+            margin-bottom: 25px;
+            display: none;
+        }
+        #admin-panel h3 { margin-top: 0; color: var(--primary); }
+        .admin-form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end; }
+
+        .mensagem {
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .sucesso { background-color: rgba(56, 217, 195, 0.15); color: var(--accent); border: 1px solid var(--accent); }
+        .erro { background-color: rgba(255, 102, 133, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+    </style>
+</head>
+<body>
+
+    <!-- TELA DE LOGIN UNIFICADA COM O BANCO -->
+    <div id="login-screen">
+        <h2>🔒 Acesso à Loja (Ympori Bank)</h2>
+        <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 20px;">Use o mesmo login/usuário e senha cadastrados no seu Ympori Bank.</p>
+        <form id="formLogin" onsubmit="fazerLogin(event)">
+            <div class="input-group">
+                <label for="login-conta">Login / Usuário</label>
+                <input type="text" id="login-conta" placeholder="Ex: ADM ou seu usuário" required>
+            </div>
+            <div class="input-group">
+                <label for="login-senha">Senha</label>
+                <input type="password" id="login-senha" placeholder="Sua senha do banco" required>
+            </div>
+            <button class="btn">Entrar na Loja</button>
+        </form>
+        <div id="login-alerta" class="mensagem" style="margin-top: 15px;"></div>
+    </div>
+
+    <!-- CONTEÚDO DA LOJA -->
+    <div id="store-content">
+        <header>
+            <div>
+                <h1>🛒 Lojinha Oficial - Ympori Bank</h1>
+                <small id="welcome-user" style="color: var(--muted);"></small>
+            </div>
+            <div class="user-info">
+                <div>Saldo: <span id="saldoAtual" class="saldo-box">Yinporion 0,00</span></div>
+                <button class="btn btn-danger" style="width: auto; padding: 8px 14px; font-size: 0.8rem;" onclick="sair()">⎋ Sair</button>
+            </div>
+        </header>
+
+        <div id="alerta" class="mensagem"></div>
+
+        <!-- PAINEL EXCLUSIVO PARA ADM -->
+        <div id="admin-panel">
+            <h3>🛠 Painel do Administrador (Gerenciar Produtos)</h3>
+            <div class="admin-form-grid">
+                <div class="input-group" style="margin:0;">
+                    <label>Nome do Item</label>
+                    <input type="text" id="adm-nome" placeholder="Ex: Super Espada">
+                </div>
+                <div class="input-group" style="margin:0;">
+                    <label>Preço (Yinporion)</label>
+                    <input type="number" id="adm-preco" step="0.01" placeholder="150">
+                </div>
+                <div class="input-group" style="margin:0;">
+                    <label>Ícone (Emoji)</label>
+                    <input type="text" id="adm-icone" placeholder="⚔️">
+                </div>
+                <button class="btn" onclick="adicionarProduto()" style="height: 45px;">Adicionar</button>
+            </div>
+        </div>
+
+        <!-- LAYOUT DE PRODUTOS E CARRINHO -->
+        <div class="main-layout">
+            <main class="container" id="product-grid"></main>
+            
+            <aside class="cart-panel">
+                <h3>🛍️ Seu Carrinho</h3>
+                <ul id="cart-items" class="cart-items-list">
+                    <li style="color: var(--muted); text-align: center;">Carrinho vazio</li>
+                </ul>
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cart-total-value">Yinporion 0,00</span>
+                </div>
+                <button class="btn btn-success" onclick="finalizarCompra()">Finalizar Compra</button>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Canvas oculto para gerar a nota PNG -->
+    <canvas id="notaCanvas" width="400" height="380" style="display:none;"></canvas>
+
+    <script>
+        // URL da API do Google Apps Script (mesma configurada no seu banco)
+        const API_URL = "https://script.google.com/macros/s/AKfycbyin4Und1JN-lPq9vBjDpz4EzeXb7g_GkBe44SmRyzvQGNBKwTYEZo0CFquPYCPioM/exec";
+
+        let accounts = JSON.parse(localStorage.getItem('ympori_accounts')) || {};
+        let currentUserKey = null;
+
+        let produtos = JSON.parse(localStorage.getItem('ympori_produtos')) || [
+            { id: 1, nome: "Poção de Vida Pequena", preco: 50.00, icone: "🧪" },
+            { id: 2, nome: "Elixir de Mana", preco: 120.00, icone: "✨" },
+            { id: 3, nome: "Escudo de Mithril", preco: 450.00, icone: "🛡️" }
+        ];
+
+        let carrinho = [];
+
+        function mostrarAlerta(elementoId, texto, tipo) {
+            const alerta = document.getElementById(elementoId);
+            if (!alerta) return;
+            alerta.innerText = texto;
+            alerta.className = 'mensagem ' + tipo;
+            alerta.style.display = 'block';
+            setTimeout(() => { alerta.style.display = 'none'; }, 4000);
+        }
+
+        async function fazerLogin(e) {
+            if (e) e.preventDefault();
+            
+            // Sincroniza as contas atualizadas do banco caso o usuário tenha cadastrado lá recentemente
+            try {
+                const response = await fetch(API_URL);
+                const remoteData = await response.json();
+                if (remoteData && Object.keys(remoteData).length > 0) {
+                    accounts = remoteData;
+                    localStorage.setItem('ympori_accounts', JSON.stringify(accounts));
+                }
+            } catch (err) {
+                console.log("Usando contas locais salvas.");
+            }
+
+            const contaInput = document.getElementById('login-conta').value.trim();
+            const senhaInput = document.getElementById('login-senha').value.trim();
+
+            if (!accounts[contaInput] || accounts[contaInput].pass !== senhaInput) {
+                mostrarAlerta('login-alerta', 'Usuário ou senha incorretos!', 'erro');
+                return;
+            }
+
+            currentUserKey = contaInput;
+            const acc = accounts[currentUserKey];
+
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('store-content').style.display = 'block';
+            
+            const welcomeEl = document.getElementById('welcome-user');
+            if (welcomeEl) {
+                welcomeEl.innerText = `Conta: ${acc.name} (${acc.code || 'ADM'})`;
+            }
+            
+            atualizarSaldoTela();
+
+            const adminPanel = document.getElementById('admin-panel');
+            if (adminPanel) {
+                adminPanel.style.display = acc.isAdmin ? 'block' : 'none';
+            }
+
+            carrinho = [];
+            atualizarCarrinho();
+            renderizarProdutos();
+        }
+
+        function sair() {
+            currentUserKey = null;
+            carrinho = [];
+            document.getElementById('store-content').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('login-senha').value = '';
+            document.getElementById('login-conta').value = '';
+        }
+
+        function atualizarSaldoTela() {
+            const saldoEl = document.getElementById('saldoAtual');
+            if (saldoEl && currentUserKey) {
+                const acc = accounts[currentUserKey];
+                const balanceText = acc.isAdmin ? 'Yinporion ∞' : `Yinporion ${acc.balance.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                saldoEl.innerText = balanceText;
+            }
+        }
+
+        async function salvarDadosBanco() {
+            localStorage.setItem('ympori_accounts', JSON.stringify(accounts));
+            if (!API_URL) return;
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(accounts)
+                });
+            } catch (e) {
+                console.error("Erro ao sincronizar saldo com o banco/Drive:", e);
+            }
+        }
+
+        function renderizarProdutos() {
+            const grid = document.getElementById('product-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const acc = accounts[currentUserKey];
+
+            produtos.forEach((prod, index) => {
+                let botaoRemoverHtml = '';
+                if (acc && acc.isAdmin === true) {
+                    botaoRemoverHtml = `<button class="delete-card-btn" onclick="removerProduto(${index})" title="Remover item">✕</button>`;
+                }
+
+                grid.innerHTML += `
+                    <div class="product-card">
+                        ${botaoRemoverHtml}
+                        <div>
+                            <div class="product-icon">${prod.icone}</div>
+                            <div class="product-title">${prod.nome}</div>
+                            <div class="product-price">Yinporion ${prod.preco.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                        </div>
+                        <button class="btn" onclick="adicionarAoCarrinho(${index})">Adicionar ao Carrinho</button>
+                    </div>
+                `;
+            });
+        }
+
+        function adicionarAoCarrinho(index) {
+            const produto = produtos[index];
+            const itemExistente = carrinho.find(item => item.id === produto.id);
+
+            if (itemExistente) {
+                itemExistente.quantidade++;
+            } else {
+                carrinho.push({ ...produto, quantidade: 1 });
+            }
+
+            atualizarCarrinho();
+        }
+
+        function atualizarCarrinho() {
+            const lista = document.getElementById('cart-items');
+            const totalValor = document.getElementById('cart-total-value');
+            if (!lista || !totalValor) return;
+            
+            lista.innerHTML = '';
+
+            if (carrinho.length === 0) {
+                lista.innerHTML = '<li style="color: var(--muted); text-align: center;">Carrinho vazio</li>';
+                totalValor.innerText = 'Yinporion 0,00';
+                return;
+            }
+
+            let totalGeral = 0;
+
+            carrinho.forEach((item, index) => {
+                const subtotal = item.preco * item.quantidade;
+                totalGeral += subtotal;
+
+                lista.innerHTML += `
+                    <li class="cart-item">
+                        <span>${item.icone} ${item.nome} (x${item.quantidade})</span>
+                        <span>Yinporion ${subtotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})} 
+                            <button onclick="removerDoCarrinho(${index})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:bold;">🗑️</button>
+                        </span>
+                    </li>
+                `;
+            });
+
+            totalValor.innerText = `Yinporion ${totalGeral.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        }
+
+        function removerDoCarrinho(index) {
+            carrinho.splice(index, 1);
+            atualizarCarrinho();
+        }
+
+        function calcularTotalCarrinho() {
+            return carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+        }
+
+        async function finalizarCompra() {
+            if (carrinho.length === 0) {
+                mostrarAlerta('alerta', 'Seu carrinho está vazio!', 'erro');
+                return;
+            }
+
+            const totalGeral = calcularTotalCarrinho();
+            const acc = accounts[currentUserKey];
+
+            if (acc.isAdmin || acc.balance >= totalGeral) {
+                if (!acc.isAdmin) {
+                    acc.balance -= totalGeral;
+                }
+
+                // Adiciona transação no extrato do banco do usuário
+                const dateStr = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+                if (!acc.transactions) acc.transactions = [];
+                acc.transactions.push({
+                    type: 'out',
+                    title: 'Compra na Loja Oficial',
+                    date: dateStr,
+                    amount: totalGeral
+                });
+
+                await salvarDadosBanco();
+                atualizarSaldoTela();
+                
+                mostrarAlerta('alerta', 'Compra realizada com sucesso! Nota fiscal gerada.', 'sucesso');
+                gerarNotaPNG(carrinho, totalGeral);
+
+                carrinho = [];
+                atualizarCarrinho();
+            } else {
+                mostrarAlerta('alerta', `Saldo insuficiente! O total da compra é Yinporion ${totalGeral.toLocaleString('pt-BR', {minimumFractionDigits: 2})}.`, 'erro');
+            }
+        }
+
+        function gerarNotaPNG(itens, totalGeral) {
+            const canvas = document.getElementById('notaCanvas');
+            const ctx = canvas.getContext('2d');
+            const acc = accounts[currentUserKey];
+
+            canvas.height = 300 + (itens.length * 25);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Fundo da Nota (Branco)
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Borda Estilizada
+            ctx.strokeStyle = '#8b7cff';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+
+            // Cabeçalho
+            ctx.fillStyle = '#080b14';
+            ctx.font = 'bold 18px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText('YMPORI BANK - COMPROVANTE 
+

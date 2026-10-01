@@ -4,29 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mercado Arcano - Loja RPG</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- jsPDF para Download da Nota de Compra -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .rpg-card { background: rgba(30, 41, 59, 0.85); border: 1px solid #334155; backdrop-filter: blur(8px); }
+        body { background-color: #0f172a; color: #f8fafc; font-family: sans-serif; }
+        .rpg-card { background: rgba(30, 41, 59, 0.85); border: 1px solid #334155; }
         .gold-text { color: #fbbf24; text-shadow: 0 0 8px rgba(251, 191, 36, 0.3); }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Header / Navbar -->
+    <!-- Header -->
     <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-shield-halved text-amber-400 text-3xl"></i>
-                <h1 class="text-2xl font-bold tracking-wider gold-text">Mercado Arcano</h1>
+                <h1 class="text-2xl font-bold gold-text">Mercado Arcano</h1>
             </div>
 
-            <!-- Area de Status do Usuario -->
             <div id="userHeaderArea" class="flex items-center space-x-4 hidden">
                 <span id="userBadge" class="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full text-sm font-semibold">
                     <i class="fa-solid fa-user-ninja mr-1"></i> <span id="usernameDisplay">Aventureiro</span>
@@ -34,11 +30,11 @@
                 <span id="goldDisplay" class="text-amber-400 font-bold flex items-center gap-1">
                     <i class="fa-solid fa-coins"></i> <span id="userOuro">0</span> PO
                 </span>
-                <button onclick="abrirCarrinho()" class="relative p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-amber-400 transition">
+                <button onclick="abrirCarrinho()" class="relative p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-amber-400">
                     <i class="fa-solid fa-cart-shopping text-xl"></i>
                     <span id="cartCount" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
                 </button>
-                <button onclick="logout()" class="p-2 bg-red-900/40 hover:bg-red-800/60 text-red-300 rounded-lg text-sm transition">
+                <button onclick="logout()" class="p-2 bg-red-900/40 hover:bg-red-800/60 text-red-300 rounded-lg text-sm">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
             </div>
@@ -47,61 +43,48 @@
 
     <main class="max-w-7xl mx-auto p-6 flex-1 w-full">
 
-        <!-- 1. Tela de Login -->
+        <!-- Login -->
         <section id="loginSection" class="max-w-md mx-auto mt-12 rpg-card p-8 rounded-xl shadow-2xl">
             <h2 class="text-2xl font-bold text-center mb-6 gold-text"><i class="fa-solid fa-key mr-2"></i> Autenticação RPG</h2>
             
-            <div class="bg-slate-800/60 p-3 rounded-lg text-xs text-slate-300 mb-6 border border-slate-700">
-                <p class="font-bold text-amber-400 mb-1"><i class="fa-solid fa-circle-info"></i> Contas ativas encontradas no Drive:</p>
-                <ul class="list-disc list-inside space-y-1">
-                    <li><b>Usuário:</b> <code class="text-amber-200">nero</code> | <b>Senha:</b> <code class="text-amber-200">vagalume</code></li>
-                    <li><b>Administrador:</b> <code class="text-purple-300">adm</code> | <b>Senha:</b> <code class="text-purple-300">admin123</code></li>
-                </ul>
-            </div>
+            <p id="statusCarregamento" class="text-xs text-center text-amber-400 mb-4">Carregando usuários do Google Drive...</p>
 
             <form id="loginForm" onsubmit="realizarLogin(event)" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-1">Chave de Usuário (userKey)</label>
-                    <input type="text" id="loginKey" placeholder="Ex: nero ou adm" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500">
+                    <label class="block text-sm text-slate-300 mb-1">Chave de Usuário (userKey)</label>
+                    <input type="text" id="loginKey" placeholder="Ex: nero, cranco ou adm" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-1">Senha (userPass)</label>
-                    <input type="password" id="loginPass" placeholder="Sua senha" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500">
+                    <label class="block text-sm text-slate-300 mb-1">Senha (userPass)</label>
+                    <input type="password" id="loginPass" placeholder="Sua senha" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white">
                 </div>
-                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-3 rounded-lg transition duration-200 mt-2">
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-3 rounded-lg transition mt-2">
                     Entrar na Loja
                 </button>
             </form>
             <p id="loginError" class="text-red-400 text-sm mt-4 text-center hidden"><i class="fa-solid fa-triangle-exclamation"></i> Usuário ou senha incorretos!</p>
         </section>
 
-        <!-- 2. Painel Principal da Loja (Visível após Login) -->
+        <!-- Loja -->
         <section id="shopSection" class="hidden space-y-6">
-            
-            <!-- Banner / Admin Controls -->
             <div id="adminBanner" class="hidden p-4 bg-purple-900/30 border border-purple-500/40 rounded-xl flex justify-between items-center">
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-crown text-purple-400 text-2xl"></i>
                     <div>
                         <h3 class="font-bold text-purple-200">Painel de Administrador</h3>
-                        <p class="text-xs text-purple-300">Permissão total: adicione, modifique ou remova itens do catálogo.</p>
+                        <p class="text-xs text-purple-300">Gerencie o estoque e crie novos itens.</p>
                     </div>
                 </div>
                 <button onclick="abrirModalItem()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-semibold text-sm transition flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Adicionar Novo Item
+                    <i class="fa-solid fa-plus"></i> Adicionar Item
                 </button>
             </div>
 
-            <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-bold gold-text flex items-center gap-2">
-                    <i class="fa-solid fa-store"></i> Itens da Guilda
-                </h2>
-            </div>
+            <h2 class="text-2xl font-bold gold-text flex items-center gap-2">
+                <i class="fa-solid fa-store"></i> Itens Disponíveis
+            </h2>
 
-            <!-- Grid de Itens -->
-            <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Preenchido dinamicamente via JS -->
-            </div>
+            <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
     </main>
 
@@ -109,34 +92,32 @@
     <div id="cartModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="rpg-card max-w-lg w-full p-6 rounded-xl space-y-4">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="text-xl font-bold gold-text"><i class="fa-solid fa-cart-flatbed"></i> Carrinho de Compras</h3>
+                <h3 class="text-xl font-bold gold-text"><i class="fa-solid fa-cart-flatbed"></i> Seu Carrinho</h3>
                 <button onclick="fecharCarrinho()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
-            <div id="cartItemsList" class="space-y-3 max-h-60 overflow-y-auto pr-2">
-                <!-- Itens do Carrinho -->
-            </div>
+            <div id="cartItemsList" class="space-y-3 max-h-60 overflow-y-auto"></div>
 
             <div class="border-t border-slate-700 pt-3 flex justify-between items-center">
-                <span class="text-slate-300 font-semibold">Total da Compra:</span>
+                <span class="text-slate-300 font-semibold">Total:</span>
                 <span id="cartTotal" class="text-xl font-bold text-amber-400">0 PO</span>
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button onclick="fecharCarrinho()" class="w-1/2 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">Continuar Comprando</button>
-                <button onclick="finalizarCompra()" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition">Pagar e Baixar Nota</button>
+                <button onclick="fecharCarrinho()" class="w-1/2 py-2 bg-slate-800 text-slate-300 rounded-lg">Voltar</button>
+                <button onclick="finalizarCompra()" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition">Finalizar e Baixar Nota</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal Adicionar/Editar Item (ADMIN) -->
+    <!-- Modal Item (ADMIN) -->
     <div id="itemModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="rpg-card max-w-md w-full p-6 rounded-xl space-y-4">
-            <h3 id="itemModalTitle" class="text-xl font-bold text-purple-300"><i class="fa-solid fa-pen-to-square"></i> Item da Loja</h3>
+            <h3 id="itemModalTitle" class="text-xl font-bold text-purple-300">Item da Loja</h3>
             <form id="itemForm" onsubmit="salvarItem(event)" class="space-y-3">
                 <input type="hidden" id="itemId">
                 <div>
-                    <label class="block text-xs text-slate-300 mb-1">Nome do Item</label>
+                    <label class="block text-xs text-slate-300 mb-1">Nome</label>
                     <input type="text" id="itemName" required class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-white">
                 </div>
                 <div>
@@ -155,21 +136,17 @@
                 </div>
                 <div class="flex gap-2 pt-3">
                     <button type="button" onclick="fecharModalItem()" class="w-1/2 py-2 bg-slate-800 text-slate-300 rounded">Cancelar</button>
-                    <button type="submit" class="w-1/2 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded">Salvar Alterações</button>
+                    <button type="submit" class="w-1/2 py-2 bg-purple-600 text-white font-bold rounded">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Script de Lógica e Integração -->
     <script>
-        // Logins carregados do arquivo ympori_accounts.json no Drive + Conta ADM
-        let ACCOUNTS = [
-            { userKey: "nero", userPass: "vagalume", role: "user", ouro: 2500 },
-            { userKey: "adm", userPass: "admin123", role: "admin", ouro: 999999 }
-        ];
+        // COLE AQUI A URL GERADA NA IMPLANTAÇÃO DO SEU GOOGLE APPS SCRIPT
+        const APPS_SCRIPT_URL = 'COLE_SUA_URL_DO_APPS_SCRIPT_AQUI';
 
-        // Catálogo de Itens da Loja RPG
+        let ACCOUNTS = [];
         let inventory = [
             { id: 1, name: "Pergaminho de Teleporte", desc: "Permite teletransportar o conjurador para uma guilda próxima.", price: 450, stock: 10, icon: "fa-scroll" },
             { id: 2, name: "Espada de Mithril", desc: "Uma espada leve e extremamente afiada (+12 Ataque).", price: 1200, stock: 3, icon: "fa-shield-cat" },
@@ -179,7 +156,33 @@
         let currentUser = null;
         let cart = [];
 
-        // --- 1. Autenticação de Login ---
+        // Carregar a lista de usuários vinda diretamente do arquivo do Drive
+        async function carregarDadosDoDrive() {
+            const statusEl = document.getElementById('statusCarregamento');
+            try {
+                const response = await fetch(APPS_SCRIPT_URL);
+                const data = await response.json();
+                
+                if (Array.isArray(data)) {
+                    ACCOUNTS = data;
+                } else {
+                    ACCOUNTS = [data]; // Compatibilidade caso seja apenas 1 objeto
+                }
+                statusEl.innerText = "✓ Dados de login sincronizados com o Google Drive!";
+                statusEl.className = "text-xs text-center text-emerald-400 mb-4";
+            } catch (err) {
+                console.error("Erro ao carregar do Drive:", err);
+                statusEl.innerText = "Aviso: Usando dados locais de contingência.";
+                statusEl.className = "text-xs text-center text-amber-400 mb-4";
+                ACCOUNTS = [
+                    { userKey: "nero", userPass: "vagalume", ouro: 2500, role: "user" },
+                    { userKey: "adm", userPass: "admin123", ouro: 999999, role: "admin" }
+                ];
+            }
+        }
+
+        window.onload = carregarDadosDoDrive;
+
         function realizarLogin(e) {
             e.preventDefault();
             const key = document.getElementById('loginKey').value.trim();
@@ -189,20 +192,15 @@
 
             if (user) {
                 currentUser = { ...user };
-                document.getElementById('loginError').classList.add('hidden');
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('shopSection').classList.remove('hidden');
                 document.getElementById('userHeaderArea').classList.remove('hidden');
-                
                 document.getElementById('usernameDisplay').innerText = currentUser.userKey;
                 document.getElementById('userOuro').innerText = currentUser.ouro;
 
                 if (currentUser.role === 'admin') {
                     document.getElementById('adminBanner').classList.remove('hidden');
-                } else {
-                    document.getElementById('adminBanner').classList.add('hidden');
                 }
-
                 renderItens();
             } else {
                 document.getElementById('loginError').classList.remove('hidden');
@@ -215,11 +213,9 @@
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('shopSection').classList.add('hidden');
             document.getElementById('userHeaderArea').classList.add('hidden');
-            document.getElementById('loginForm').reset();
             atualizarCarrinhoBadge();
         }
 
-        // --- 2. Renderização da Loja e Painel ADM ---
         function renderItens() {
             const grid = document.getElementById('itemsGrid');
             grid.innerHTML = '';
@@ -227,7 +223,7 @@
             inventory.forEach(item => {
                 const isAdmin = currentUser && currentUser.role === 'admin';
                 const card = document.createElement('div');
-                card.className = "rpg-card p-5 rounded-xl flex flex-col justify-between hover:border-amber-500/50 transition";
+                card.className = "rpg-card p-5 rounded-xl flex flex-col justify-between";
 
                 card.innerHTML = `
                     <div>
@@ -237,8 +233,8 @@
                             </span>
                             ${isAdmin ? `
                                 <div class="flex gap-2">
-                                    <button onclick="editarItem(${item.id})" class="text-purple-400 hover:text-purple-300 p-1"><i class="fa-solid fa-pen"></i></button>
-                                    <button onclick="excluirItem(${item.id})" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash"></i></button>
+                                    <button onclick="editarItem(${item.id})" class="text-purple-400 p-1"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="excluirItem(${item.id})" class="text-red-400 p-1"><i class="fa-solid fa-trash"></i></button>
                                 </div>
                             ` : ''}
                         </div>
@@ -248,11 +244,11 @@
                     <div>
                         <div class="flex justify-between items-center mb-3">
                             <span class="text-amber-400 font-bold"><i class="fa-solid fa-coins"></i> ${item.price} PO</span>
-                            <span class="text-xs text-slate-400">Estoque: <b class="text-slate-200">${item.stock}</b></span>
+                            <span class="text-xs text-slate-400">Estoque: ${item.stock}</span>
                         </div>
                         <button onclick="adicionarAoCarrinho(${item.id})" ${item.stock <= 0 ? 'disabled' : ''} 
-                            class="w-full py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-700 disabled:text-slate-500 text-slate-950 font-bold rounded-lg transition flex justify-center items-center gap-2">
-                            <i class="fa-solid fa-cart-plus"></i> ${item.stock > 0 ? 'Adicionar ao Carrinho' : 'Esgotado'}
+                            class="w-full py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-700 text-slate-950 font-bold rounded-lg transition">
+                            ${item.stock > 0 ? 'Adicionar ao Carrinho' : 'Esgotado'}
                         </button>
                     </div>
                 `;
@@ -260,7 +256,6 @@
             });
         }
 
-        // --- 3. Carrinho de Compras ---
         function adicionarAoCarrinho(itemId) {
             const item = inventory.find(i => i.id === itemId);
             if (!item || item.stock <= 0) return;
@@ -275,8 +270,7 @@
         }
 
         function atualizarCarrinhoBadge() {
-            const count = cart.reduce((acc, i) => acc + i.qty, 0);
-            document.getElementById('cartCount').innerText = count;
+            document.getElementById('cartCount').innerText = cart.reduce((acc, i) => acc + i.qty, 0);
         }
 
         function abrirCarrinho() {
@@ -285,7 +279,7 @@
             let total = 0;
 
             if (cart.length === 0) {
-                list.innerHTML = `<p class="text-slate-400 text-center py-4">Seu carrinho está vazio.</p>`;
+                list.innerHTML = `<p class="text-slate-400 text-center py-4">Carrinho vazio.</p>`;
             } else {
                 cart.forEach(item => {
                     const subtotal = item.price * item.qty;
@@ -295,11 +289,6 @@
                             <div>
                                 <h4 class="font-bold text-slate-200">${item.name}</h4>
                                 <span class="text-xs text-amber-400">${item.price} PO x ${item.qty} = ${subtotal} PO</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button onclick="alterarQtd(${item.id}, -1)" class="px-2 bg-slate-700 rounded text-slate-300">-</button>
-                                <span class="text-sm font-bold">${item.qty}</span>
-                                <button onclick="alterarQtd(${item.id}, 1)" class="px-2 bg-slate-700 rounded text-slate-300">+</button>
                             </div>
                         </div>
                     `;
@@ -314,164 +303,75 @@
             document.getElementById('cartModal').classList.add('hidden');
         }
 
-        function alterarQtd(id, delta) {
-            const item = cart.find(c => c.id === id);
-            const stockItem = inventory.find(i => i.id === id);
-            if (!item) return;
-
-            item.qty += delta;
-            if (item.qty > stockItem.stock) item.qty = stockItem.stock;
-            if (item.qty <= 0) {
-                cart = cart.filter(c => c.id !== id);
-            }
-            atualizarCarrinhoBadge();
-            abrirCarrinho();
-        }
-
-        // --- 4. Comprar, Atualizar Arquivo e Baixar PDF ---
-        function finalizarCompra() {
+        async function finalizarCompra() {
             if (cart.length === 0) return;
-
             const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
 
             if (currentUser.ouro < total) {
-                alert("Ouro insuficiente para concluir esta compra!");
+                alert("Ouro insuficiente para concluir a compra!");
                 return;
             }
 
-            // Abate de ouro e atualização do estoque
+            // Abater ouro localmente
             currentUser.ouro -= total;
             document.getElementById('userOuro').innerText = currentUser.ouro;
 
-            cart.forEach(cartItem => {
-                const invItem = inventory.find(i => i.id === cartItem.id);
-                if (invItem) invItem.stock -= cartItem.qty;
-            });
-
-            // Atualização da estrutura em formato JSON equivalente ao ympori_accounts.json
-            const jsonAtualizado = {
+            // Dados da compra vinculando o usuário específico que está logado
+            const payload = {
                 action: "buy",
                 userKey: currentUser.userKey,
                 userPass: currentUser.userPass,
+                novoSaldo: currentUser.ouro,
                 itemName: cart.map(i => `${i.qty}x ${i.name}`).join(', '),
-                amount: total,
-                date: new Date().toISOString()
+                amount: total
             };
 
-            console.log("Arquivo JSON atualizado para o Drive:", jsonAtualizado);
+            // Enviar a requisição para o Apps Script atualizar o histórico do usuário no Drive
+            if (!APPS_SCRIPT_URL.includes('COLE_SUA_URL')) {
+                fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            }
 
-            // Geração e Download da Nota de Compra
             gerarNotaDeCompra(cart, total);
 
-            // Resets da UI
             cart = [];
             atualizarCarrinhoBadge();
             fecharCarrinho();
             renderItens();
-
-            alert("Compra realizada com sucesso! A nota fiscal/comprovante PDF foi baixado automaticamente.");
+            alert("Compra realizada! O saldo e o histórico da conta foram atualizados no Drive.");
         }
 
-        function gerarNotaDeCompra(itensComprados, total) {
+        function gerarNotaDeCompra(itens, total) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(18);
-            doc.text("MERCADO ARCANO - COMPROVANTE DE COMPRA", 15, 20);
-
-            doc.setFontSize(11);
-            doc.setFont("helvetica", "normal");
+            doc.text("MERCADO ARCANO - NOTA DE COMPRA", 15, 20);
             doc.text(`Aventureiro: ${currentUser.userKey}`, 15, 30);
-            doc.text(`Data: ${new Date().toLocaleString('pt-BR')}`, 15, 38);
-            doc.text(`----------------------------------------------------------------------------------------`, 15, 44);
-
-            let y = 52;
-            doc.setFont("helvetica", "bold");
-            doc.text("Item", 15, y);
-            doc.text("Qtd", 110, y);
-            doc.text("Preço Un.", 140, y);
-            doc.text("Subtotal", 175, y);
-            y += 8;
-
-            doc.setFont("helvetica", "normal");
-            itensComprados.forEach(item => {
-                doc.text(item.name, 15, y);
-                doc.text(String(item.qty), 110, y);
-                doc.text(`${item.price} PO`, 140, y);
-                doc.text(`${item.price * item.qty} PO`, 175, y);
-                y += 8;
-            });
-
-            doc.text(`----------------------------------------------------------------------------------------`, 15, y);
-            y += 10;
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(13);
-            doc.text(`TOTAL PAGO: ${total} PO`, 15, y);
-
-            doc.save(`Nota_Compra_${currentUser.userKey}_${Date.now()}.pdf`);
+            doc.text(`Total Pago: ${total} PO`, 15, 40);
+            doc.save(`Nota_${currentUser.userKey}.pdf`);
         }
 
-        // --- 5. Funções de Administração (ADM) ---
         function abrirModalItem(item = null) {
-            if (item) {
-                document.getElementById('itemModalTitle').innerText = "Editar Item";
-                document.getElementById('itemId').value = item.id;
-                document.getElementById('itemName').value = item.name;
-                document.getElementById('itemDesc').value = item.desc;
-                document.getElementById('itemPrice').value = item.price;
-                document.getElementById('itemStock').value = item.stock;
-            } else {
-                document.getElementById('itemModalTitle').innerText = "Adicionar Novo Item";
-                document.getElementById('itemForm').reset();
-                document.getElementById('itemId').value = '';
-            }
             document.getElementById('itemModal').classList.remove('hidden');
         }
-
         function fecharModalItem() {
             document.getElementById('itemModal').classList.add('hidden');
         }
-
         function salvarItem(e) {
             e.preventDefault();
-            const id = document.getElementById('itemId').value;
-            const name = document.getElementById('itemName').value;
-            const desc = document.getElementById('itemDesc').value;
-            const price = parseFloat(document.getElementById('itemPrice').value);
-            const stock = parseInt(document.getElementById('itemStock').value);
-
-            if (id) {
-                const item = inventory.find(i => i.id == id);
-                if (item) {
-                    item.name = name;
-                    item.desc = desc;
-                    item.price = price;
-                    item.stock = stock;
-                }
-            } else {
-                const newItem = {
-                    id: Date.now(),
-                    name, desc, price, stock,
-                    icon: "fa-box-open"
-                };
-                inventory.push(newItem);
-            }
-
+            const newItem = {
+                id: Date.now(),
+                name: document.getElementById('itemName').value,
+                desc: document.getElementById('itemDesc').value,
+                price: parseFloat(document.getElementById('itemPrice').value),
+                stock: parseInt(document.getElementById('itemStock').value)
+            };
+            inventory.push(newItem);
             fecharModalItem();
             renderItens();
-        }
-
-        function editarItem(id) {
-            const item = inventory.find(i => i.id === id);
-            if (item) abrirModalItem(item);
-        }
-
-        function excluirItem(id) {
-            if (confirm("Confirma a exclusão deste item do catálogo?")) {
-                inventory = inventory.filter(i => i.id !== id);
-                renderItens();
-            }
         }
     </script>
 </body>

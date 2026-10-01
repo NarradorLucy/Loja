@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nossa Loja</title>
+  <title>Nossa Loja Virtual</title>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { margin: 0; padding: 0; background-color: #f4f6f8; color: #333; }
@@ -118,23 +118,17 @@
   </div>
 
   <script>
-    // URL gerada ao implantar o Google Apps Script
-    const API_URL = "SUA_URL_DO_GOOGLE_APPS_SCRIPT_AQUI";
+    // URL do seu Google Apps Script já configurada
+    const API_URL = "https://script.google.com/macros/s/AKfycbxI67RA6Qrybom4UZ6lI9sP0JsDoOuwBEZXugZX33d6UzVrYyHoYI_nsgCZrU91Ads/exec";
 
     let produtos = [];
     let carrinho = {};
 
-    // Carregar produtos ao iniciar
     window.onload = function() {
       carregarProdutos();
     };
 
     function carregarProdutos() {
-      if (API_URL === "SUA_URL_DO_GOOGLE_APPS_SCRIPT_AQUI") {
-        alert("Por favor, configure a variável API_URL no código HTML com a URL do seu Google Apps Script.");
-        return;
-      }
-
       fetch(API_URL)
         .then(res => res.json())
         .then(data => {
@@ -156,7 +150,6 @@
       });
     }
 
-    // Renderizar Vitrine
     function renderizarVitrine() {
       const grid = document.getElementById("grid-produtos");
       grid.innerHTML = "";
@@ -172,7 +165,6 @@
       });
     }
 
-    // Gerenciamento do Carrinho
     function adicionarAoCarrinho(id) {
       if (carrinho[id]) {
         carrinho[id]++;
@@ -226,7 +218,6 @@
       document.getElementById("valor-total").innerText = total.toFixed(2);
     }
 
-    // Finalizar compra e baixar nota fiscal TXT
     function finalizarCompra() {
       const keys = Object.keys(carrinho);
       if (keys.length === 0) {
@@ -258,20 +249,17 @@
       conteudoNota += "=========================================\n";
       conteudoNota += "       Obrigado pela sua compra!         \n";
 
-      // Download do arquivo TXT
       const blob = new Blob([conteudoNota], { type: "text/plain;charset=utf-8" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = `Nota_Compra_${Date.now()}.txt`;
       link.click();
 
-      // Limpar carrinho
       carrinho = {};
       renderizarCarrinho();
       alert("Compra realizada com sucesso! Sua nota foi baixada.");
     }
 
-    // Modais e Login
     function abrirModalLogin() {
       document.getElementById("modal-login").style.display = "flex";
     }
@@ -294,7 +282,6 @@
       }
     }
 
-    // CRUD Produtos (Mercador)
     function renderizarTabelaAdmin() {
       const tbody = document.getElementById("corpo-tabela-admin");
       tbody.innerHTML = "";
@@ -325,18 +312,15 @@
       }
 
       if (id) {
-        // Editar
         const index = produtos.findIndex(p => p.id == id);
         if (index !== -1) {
           produtos[index] = { id: parseInt(id), nome, icone, preco };
         }
       } else {
-        // Adicionar
         const novoId = produtos.length > 0 ? Math.max(...produtos.map(p => p.id)) + 1 : 1;
         produtos.push({ id: novoId, nome, icone, preco });
       }
 
-      // Limpar formulário
       document.getElementById("prod-id").value = "";
       document.getElementById("prod-nome").value = "";
       document.getElementById("prod-icone").value = "";

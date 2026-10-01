@@ -7,7 +7,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#080b14;--panel:#111728;--panel2:#171e32;--text:#eef2ff;--muted:#929bb5;--accent:#8b7cff;--accent2:#38d9c3;--danger:#ff6685}
-body{font-family:Inter,system-ui,Arial,sans-serif;background:radial-gradient(circle at 80% 0%,#25204d 0,#080b14 38%);color:var(--text);min-height:100vh;padding:24px}
+body{font-family:Inter,system-ui,sans-serif;background:radial-gradient(circle at 80% 0%,#25204d 0,#080b14 38%);color:var(--text);min-height:100vh;padding:24px}
 header{max-width:1000px;margin:0 auto 30px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #242b40;padding-bottom:20px}
 .logo{font-size:24px;font-weight:800}.logo span{color:var(--accent)}
 .user-status{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px}
@@ -25,6 +25,16 @@ header{max-width:1000px;margin:0 auto 30px;display:flex;justify-content:space-be
 .btn-buy{background:var(--accent);border:0;color:#fff;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer;transition:0.2s}
 .btn-buy:hover{opacity:0.9;transform:translateY(-1px)}
 
+/* Modal de Confirmação com Senha */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;place-items:center;z-index:30}
+.modal-content{background:#111728;padding:24px;border-radius:18px;border:1px solid #28314a;width:100%;max-width:380px}
+.field{display:grid;gap:6px;margin:15px 0}
+.field label{font-size:13px;color:var(--muted)}
+input{background:#0c1120;border:1px solid #2b3550;color:#fff;border-radius:10px;padding:12px;outline:none;width:100%}
+input:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.btn-alt{background:#252d46;border:0;color:#fff;padding:10px;border-radius:10px;font-weight:700;cursor:pointer;flex:1}
+
 .toast{position:fixed;right:25px;bottom:25px;background:#171e32;border:1px solid #303b59;padding:13px 18px;border-radius:12px;display:none;z-index:20;font-weight:600}
 </style>
 </head>
@@ -35,7 +45,7 @@ header{max-width:1000px;margin:0 auto 30px;display:flex;justify-content:space-be
     <div class="logo">Loja<span>Ympori</span></div>
     <p style="font-size: 12px; color: var(--muted);">Itens & Equipamentos de RPG</p>
   </div>
-  <div class="user-status" id="userStatus">
+  <div class="user-status">
     <span>Conectado como: <strong id="sessionUser">Detectando...</strong></span>
     <button class="btn-session" onclick="changeUser()">Trocar Conta</button>
   </div>
@@ -45,23 +55,44 @@ header{max-width:1000px;margin:0 auto 30px;display:flex;justify-content:space-be
   <div class="grid" id="catalog"></div>
 </main>
 
+<!-- Modal de Confirmação de Compra -->
+<div id="buyModal" class="modal">
+  <div class="modal-content">
+    <h3 style="margin-bottom:8px;">Confirmar Pagamento</h3>
+    <p style="font-size:13px; color:var(--muted);" id="modalItemDesc">Item: --</p>
+    
+    <form onsubmit="executePurchase(event)">
+      <div class="field">
+        <label>Usuário / Código YMP</label>
+        <input id="modalUser" required placeholder="Seu login no banco">
+      </div>
+      <div class="field">
+        <label>Senha do Ympori Bank</label>
+        <input id="modalPass" type="password" required placeholder="Sua senha de acesso">
+      </div>
+      
+      <div class="modal-actions">
+        <button type="button" class="btn-alt" onclick="closeBuyModal()">Cancelar</button>
+        <button type="submit" class="btn-buy" style="flex:1;">Pagar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script>
-// URL da API configurada no Google Apps Script
 const API_URL = "https://script.google.com/macros/s/AKfycbyin4Und1JN-lPq9vBjDpz4EzeXb7g_GkBe44SmRyzvQGNBKwTYEZo0CFquPYCPioM/exec";
 
-// Catálogo de Itens do RPG
 const items = [
-  { category: "Consumível", name: "Poção de Vida Maior", desc: "Restaura 50 PVs instantaneamente durante o combate.", price: 150.00 },
-  { category: "Equipamento", name: "Espada de Mithril", desc: "Arma leve e afiada. Concede +2 de bônus nos testes de ataque.", price: 1200.00 },
-  { category: "Pergaminho", name: "Pergaminho de Teleporte", desc: "Permite escapar imediatamente de uma batalha ou armadilha.", price: 450.00 },
-  { category: "Acessório", name: "Anel de Proteção Arcano", desc: "Aumenta a Defesa / Classe de Armadura em +1.", price: 800.00 },
-  { category: "Ferramenta", name: "Kit de Arrombamento Mágico", desc: "Garante vantagem para abrir fechaduras trancadas.", price: 300.00 },
-  { category: "Relíquia", name: "Pedra de Mana Bruta", desc: "Recarrega slots de magia de nível 1 ao nível 3.", price: 950.00 }
+  { category: "Consumível", name: "Poção de Vida Maior", desc: "Restaura 50 PVs instantaneamente.", price: 150.00 },
+  { category: "Equipamento", name: "Espada de Mithril", desc: "Arma leve. +2 nos testes de ataque.", price: 1200.00 },
+  { category: "Pergaminho", name: "Pergaminho de Teleporte", desc: "Escapa imediatamente de uma batalha.", price: 450.00 },
+  { category: "Acessório", name: "Anel de Proteção Arcano", desc: "Aumenta a Defesa em +1.", price: 800.00 }
 ];
 
-let currentUser = localStorage.getItem('ympori_session') || null;
+let currentUser = localStorage.getItem('ympori_session') || '';
+let selectedItem = null;
 
 function initStore() {
   updateUserUI();
@@ -69,21 +100,15 @@ function initStore() {
 }
 
 function updateUserUI() {
-  const display = document.getElementById('sessionUser');
-  if (currentUser) {
-    display.textContent = currentUser;
-  } else {
-    display.textContent = "Nenhuma (Convidado)";
-  }
+  document.getElementById('sessionUser').textContent = currentUser || "Nenhuma";
 }
 
 function changeUser() {
-  const newUser = prompt("Informe seu nome de usuário ou Código de Conta (YMP-XXXX) no Ympori Bank:");
+  const newUser = prompt("Informe seu usuário no Ympori Bank:");
   if (newUser && newUser.trim() !== "") {
     currentUser = newUser.trim();
     localStorage.setItem('ympori_session', currentUser);
     updateUserUI();
-    toast(`Sessão alterada para: ${currentUser}`);
   }
 }
 
@@ -98,32 +123,49 @@ function renderCatalog() {
       </div>
       <div class="item-footer">
         <div class="price">Yinporion ${item.price.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-        <button class="btn-buy" onclick="buyItem(${index})">Comprar</button>
+        <button class="btn-buy" onclick="openBuyModal(${index})">Comprar</button>
       </div>
     </div>
   `).join('');
 }
 
-async function buyItem(index) {
-  const item = items[index];
+function openBuyModal(index) {
+  selectedItem = items[index];
+  document.getElementById('modalItemDesc').textContent = `${selectedItem.name} - Yinporion ${selectedItem.price.toFixed(2)}`;
+  document.getElementById('modalUser').value = currentUser;
+  document.getElementById('modalPass').value = '';
+  document.getElementById('buyModal').style.display = 'grid';
+}
 
-  if (!currentUser) {
-    changeUser();
-    if (!currentUser) return;
+function closeBuyModal() {
+  document.getElementById('buyModal').style.display = 'none';
+}
+
+async function executePurchase(e) {
+  e.preventDefault();
+  
+  const user = document.getElementById('modalUser').value.trim();
+  const pass = document.getElementById('modalPass').value.trim();
+
+  if (!user || !pass) {
+    toast("Preencha o usuário e a senha!");
+    return;
   }
 
-  toast(`Processando compra de "${item.name}"...`);
+  toast("Validando credenciais...");
 
   try {
     const payload = {
       action: "buy",
-      userKey: currentUser,
-      itemName: item.name,
-      amount: item.price
+      userKey: user,
+      userPass: pass,
+      itemName: selectedItem.name,
+      amount: selectedItem.price
     };
 
     const response = await fetch(API_URL, {
       method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
     });
 
@@ -131,26 +173,26 @@ async function buyItem(index) {
 
     if (res.success) {
       toast(`✅ ${res.message}`);
+      closeBuyModal();
+      
+      // Salva sessão local para próximas compras
+      currentUser = user;
+      localStorage.setItem('ympori_session', currentUser);
+      updateUserUI();
 
-      // Atualiza o localStorage se o banco estiver aberto na mesma aba/navegador
+      // Sincroniza saldo local no navegador se o banco estiver na mesma aba
       let localAccounts = JSON.parse(localStorage.getItem('ympori_accounts')) || {};
-      if (localAccounts[currentUser]) {
-        localAccounts[currentUser].balance = res.newBalance;
-        localAccounts[currentUser].transactions = localAccounts[currentUser].transactions || [];
-        localAccounts[currentUser].transactions.push({
-          type: 'out',
-          title: `Loja RPG: ${item.name}`,
-          date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
-          amount: item.price
-        });
+      let userKeyInLocal = Object.keys(localAccounts).find(k => k === user || localAccounts[k].code === user);
+      if (userKeyInLocal && localAccounts[userKeyInLocal]) {
+        localAccounts[userKeyInLocal].balance = res.newBalance;
         localStorage.setItem('ympori_accounts', JSON.stringify(localAccounts));
       }
     } else {
-      toast(`❌ ${res.message || 'Erro ao processar compra.'}`);
+      toast(`❌ ${res.message}`);
     }
-  } catch (e) {
-    console.error(e);
-    toast("❌ Erro de conexão com o Ympori Bank.");
+  } catch (err) {
+    console.error(err);
+    toast("❌ Erro de conexão com o banco.");
   }
 }
 

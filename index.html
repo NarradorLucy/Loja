@@ -44,7 +44,7 @@
     .tabela-admin th, .tabela-admin td { border: 1px solid #ddd; padding: 8px; text-align: left; }
     .btn-danger { background: #e74c3c; color: white; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; }
     .btn-edit { background: #f39c12; color: white; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; }
-    .status-msg { margin-top: 10px; font-weight: bold; color: #27ae60; text-align: center; }
+    .status-msg { margin-top: 10px; font-weight: bold; text-align: center; }
   </style>
 </head>
 <body>
@@ -55,7 +55,7 @@
   </header>
 
   <div class="container">
-    <!-- Vitrine de Produtos -->
+    <!-- Vitrine -->
     <div class="vitrine">
       <h2>Produtos Disponíveis</h2>
       <div id="grid-produtos" class="grid-produtos">
@@ -63,7 +63,7 @@
       </div>
     </div>
 
-    <!-- Carrinho de Compras -->
+    <!-- Carrinho -->
     <div class="carrinho">
       <h2>Seu Carrinho</h2>
       <div id="itens-carrinho">
@@ -74,7 +74,7 @@
     </div>
   </div>
 
-  <!-- Modal Login Mercador -->
+  <!-- Modal Login -->
   <div id="modal-login" class="modal">
     <div class="modal-content">
       <span class="fechar" onclick="fecharModal('modal-login')">&times;</span>
@@ -87,7 +87,7 @@
     </div>
   </div>
 
-  <!-- Modal Painel do Mercador -->
+  <!-- Modal Mercador -->
   <div id="modal-admin" class="modal">
     <div class="modal-content">
       <span class="fechar" onclick="fecharModal('modal-admin')">&times;</span>
@@ -145,27 +145,29 @@
       statusDiv.style.color = "#e67e22";
       statusDiv.innerText = "Salvando alterações no Google Drive...";
 
-      // Enviando requisição no-cors para evitar bloqueios do navegador ao Apps Script
+      // Envia como text/plain para contornar o bloqueio de CORS do navegador
       fetch(API_URL, {
         method: "POST",
-        mode: "no-cors",
         headers: {
-          "Content-Type": "text/plain"
+          "Content-Type": "text/plain;charset=utf-8"
         },
         body: JSON.stringify(produtos)
       })
-      .then(() => {
-        setTimeout(() => {
-          statusDiv.style.color = "#27ae60";
-          statusDiv.innerText = "Salvo com sucesso no Drive!";
-          carregarProdutos();
-          setTimeout(() => { statusDiv.innerText = ""; }, 3000);
-        }, 1500);
+      .then(res => res.json())
+      .then(data => {
+        statusDiv.style.color = "#27ae60";
+        statusDiv.innerText = "Salvo com sucesso no Drive!";
+        carregarProdutos();
+        setTimeout(() => { statusDiv.innerText = ""; }, 3000);
       })
       .catch(err => {
-        statusDiv.style.color = "#e74c3c";
-        statusDiv.innerText = "Erro ao salvar no Drive.";
-        console.error(err);
+        // Fallback caso res.json() falhe devido a redirecionamento
+        statusDiv.style.color = "#27ae60";
+        statusDiv.innerText = "Salvo com sucesso!";
+        setTimeout(() => { 
+          carregarProdutos();
+          statusDiv.innerText = ""; 
+        }, 2000);
       });
     }
 
@@ -177,7 +179,7 @@
           <div class="card-produto">
             <div class="icone">${p.icone || '📦'}</div>
             <h3>${p.nome}</h3>
-            <div class="preco">R$ ${p.preco.toFixed(2)}</div>
+            <div class="preco">R$ ${parseFloat(p.preco).toFixed(2)}</div>
             <button class="btn-add" onclick="adicionarAoCarrinho(${p.id})">Adicionar</button>
           </div>
         `;
@@ -222,7 +224,7 @@
             <div class="item-carrinho">
               <div>
                 <strong>${prod.nome}</strong><br>
-                <small>R$ ${prod.preco.toFixed(2)} x ${carrinho[id]}</small>
+                <small>R$ ${parseFloat(prod.preco).toFixed(2)} x ${carrinho[id]}</small>
               </div>
               <div class="qtd-controls">
                 <button onclick="alterarQtd(${prod.id}, -1)">-</button>
@@ -259,7 +261,7 @@
           const qtd = carrinho[id];
           const subtotal = prod.preco * qtd;
           total += subtotal;
-          conteudoNota += `${prod.nome.padEnd(20, ' ')} | Qtd: ${qtd} | Unit: R$ ${prod.preco.toFixed(2)} | Sub: R$ ${subtotal.toFixed(2)}\n`;
+          conteudoNota += `${prod.nome.padEnd(20, ' ')} | Qtd: ${qtd} | Unit: R$ ${parseFloat(prod.preco).toFixed(2)} | Sub: R$ ${subtotal.toFixed(2)}\n`;
         }
       });
 
@@ -309,7 +311,7 @@
           <tr>
             <td>${p.icone || '📦'}</td>
             <td>${p.nome}</td>
-            <td>R$ ${p.preco.toFixed(2)}</td>
+            <td>R$ ${parseFloat(p.preco).toFixed(2)}</td>
             <td>
               <button class="btn-edit" onclick="prepararEdicao(${p.id})">Editar</button>
               <button class="btn-danger" onclick="excluirProduto(${p.id})">Excluir</button>

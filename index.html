@@ -44,6 +44,7 @@
     .tabela-admin th, .tabela-admin td { border: 1px solid #ddd; padding: 8px; text-align: left; }
     .btn-danger { background: #e74c3c; color: white; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; }
     .btn-edit { background: #f39c12; color: white; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; }
+    .status-msg { margin-top: 10px; font-weight: bold; color: #27ae60; text-align: center; }
   </style>
 </head>
 <body>
@@ -100,7 +101,8 @@
       <input type="text" id="prod-icone" placeholder="Ex: 🍎">
       <label>Preço (R$):</label>
       <input type="number" step="0.01" id="prod-preco" placeholder="Ex: 2.50">
-      <button class="btn-add" onclick="salvarProduto()">Salvar Produto</button>
+      <button class="btn-add" id="btn-salvar-prod" onclick="salvarProduto()">Salvar Produto</button>
+      <div id="status-salvando" class="status-msg"></div>
 
       <h3 style="margin-top: 20px;">Produtos Cadastrados</h3>
       <table class="tabela-admin">
@@ -118,7 +120,6 @@
   </div>
 
   <script>
-    // URL do seu Google Apps Script já configurada
     const API_URL = "https://script.google.com/macros/s/AKfycbxI67RA6Qrybom4UZ6lI9sP0JsDoOuwBEZXugZX33d6UzVrYyHoYI_nsgCZrU91Ads/exec";
 
     let produtos = [];
@@ -140,13 +141,31 @@
     }
 
     function sincronizarComDrive() {
+      const statusDiv = document.getElementById("status-salvando");
+      statusDiv.style.color = "#e67e22";
+      statusDiv.innerText = "Salvando alterações no Google Drive...";
+
+      // Enviando requisição no-cors para evitar bloqueios do navegador ao Apps Script
       fetch(API_URL, {
         method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "text/plain"
+        },
         body: JSON.stringify(produtos)
       })
-      .then(res => res.json())
-      .then(data => {
-        carregarProdutos();
+      .then(() => {
+        setTimeout(() => {
+          statusDiv.style.color = "#27ae60";
+          statusDiv.innerText = "Salvo com sucesso no Drive!";
+          carregarProdutos();
+          setTimeout(() => { statusDiv.innerText = ""; }, 3000);
+        }, 1500);
+      })
+      .catch(err => {
+        statusDiv.style.color = "#e74c3c";
+        statusDiv.innerText = "Erro ao salvar no Drive.";
+        console.error(err);
       });
     }
 
